@@ -46,8 +46,11 @@ private:
 	void ShutdownWindows();
 
 private:
+	// 어플리케이션 이름
 	LPCWSTR m_applicationName;
+	// 창 인스턴스
 	HINSTANCE m_hinstance;
+	// 창 위치
 	HWND m_hwnd;
 
 	InputClass* m_Input;

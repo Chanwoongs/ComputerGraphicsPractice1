@@ -28,6 +28,7 @@ bool SystemClass::Initialize()
 
 
 	// Initialize the width and height of the screen to zero before sending the variables into the function.
+	// 윈도우 창 크기
 	screenWidth = 0;
 	screenHeight = 0;
 
@@ -97,6 +98,7 @@ void SystemClass::Run()
 	
 	// Loop until there is a quit message from the window or the user.
 	done = false;
+	// 메인 루프
 	while(!done)
 	{
 		// Handle the windows messages.
@@ -133,6 +135,7 @@ bool SystemClass::Frame()
 
 
 	// Check if the user pressed escape and wants to exit the application.
+	// Input에 관련된 걸 추가할 수 있는 부분
 	if(m_Input->IsKeyDown(VK_ESCAPE))
 	{
 		return false;
@@ -212,10 +215,12 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	RegisterClassEx(&wc);
 
 	// Determine the resolution of the clients desktop screen.
+	// 현재 해상도 얻어오기
 	screenWidth  = GetSystemMetrics(SM_CXSCREEN);
 	screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 	// Setup the screen settings depending on whether it is running in full screen or in windowed mode.
+	// 전체화면 모드
 	if(FULL_SCREEN)
 	{
 		// If full screen set the screen to maximum size of the users desktop and 32bit.
@@ -232,11 +237,13 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 		// Set the position of the window to the top left corner.
 		posX = posY = 0;
 	}
+	// 창 모드
 	else
 	{
 		// If windowed then set it to 800x600 resolution.
-		screenWidth  = 800;
-		screenHeight = 600;
+		// 필요시 기호 상수로 변경
+		screenWidth  = 1600;
+		screenHeight = 900;
 
 		// Place the window in the middle of the screen.
 		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth)  / 2;
@@ -244,6 +251,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	}
 
 	// Create the window with the screen settings and get the handle to it.
+	// 실제 윈도우를 만드는 부분
 	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName, 
 						    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
 						    posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
