@@ -15,36 +15,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\d3dclass.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\graphicsclass.cpp">
+    <ClCompile Include="systemclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\inputclass.cpp">
+    <ClCompile Include="d3dclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\main.cpp">
+    <ClCompile Include="graphicsclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\systemclass.cpp">
+    <ClCompile Include="inputclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\AlignedAllocationPolicy.h">
+    <ClInclude Include="AlignedAllocationPolicy.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\d3dclass.h">
+    <ClInclude Include="d3dclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\graphicsclass.h">
+    <ClInclude Include="graphicsclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inputclass.h">
+    <ClInclude Include="inputclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\systemclass.h">
+    <ClInclude Include="systemclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

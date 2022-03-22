@@ -25,7 +25,12 @@ D3DClass::~D3DClass()
 {
 }
 
-
+// GraphicsClass가 호출
+// 총 4가지 일을 한다
+// 1. GPU 기능 체크
+// 2. Swap버퍼 = Double 버퍼 설정, 출력용 메모리와 데이터용 메모리를 만들어서 화면 딜레이를 줄인다.
+// 3. Depth 버퍼와 Stencil 버퍼 설정
+// 4. rasterizer 설정, 픽셀을 어떤식으로 채울건지
 bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullscreen, 
 						  float screenDepth, float screenNear)
 {
