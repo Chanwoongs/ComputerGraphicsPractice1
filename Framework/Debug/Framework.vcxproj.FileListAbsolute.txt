@@ -1,2 +1,3 @@
 C:\Users\방찬웅\Desktop\Project\ComputerGraphicsPractice1\Framework\Debug\Framework.exe
 C:\Users\B409_37\Desktop\ComputerGraphicsPractice1\Framework\Debug\Framework.exe
+C:\Users\B409_21\Desktop\ComputerGraphicsPractice1\Framework\Debug\Framework.exe
