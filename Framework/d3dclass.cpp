@@ -24,6 +24,7 @@ D3DClass::D3DClass(const D3DClass& other)
 D3DClass::~D3DClass()
 {
 }
+// 구조를 만든다. 채운다. 쓴다. 지운다.
 
 // GraphicsClass가 호출
 // 총 4가지 일을 한다
@@ -34,29 +35,42 @@ D3DClass::~D3DClass()
 bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullscreen, 
 						  float screenDepth, float screenNear)
 {
+	// 결과를 담을 변수
 	HRESULT result;
+
+	// GPU 스펙을 알아내기 위한 변수 (회사같은 곳에서 굉장히 중요) 1. 지원하는 해상도, 2. 그래픽카드 메모리 참조
 	IDXGIFactory* factory;
 	IDXGIAdapter* adapter;
 	IDXGIOutput* adapterOutput;
 	unsigned int numModes, i, numerator, denominator, stringLength;
 	DXGI_MODE_DESC* displayModeList;
 	DXGI_ADAPTER_DESC adapterDesc;
+
 	int error;
+
+	// Swap버퍼 앞 - front buffer(건들지 않음), 뒤 - back buffer(여기에 그리면 된다) D3D가 알아서 swap 해줌
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	D3D_FEATURE_LEVEL featureLevel;
 	ID3D11Texture2D* backBufferPtr;
+
+	// depth버퍼 - Z버퍼, 3차원의 Z값 정보, 어느 것이 멀리있느냐
 	D3D11_TEXTURE2D_DESC depthBufferDesc;
+	// stencil버퍼 - 그림자, 오버래핑
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+
+	// rasterization - 픽셀에 그린다
 	D3D11_RASTERIZER_DESC rasterDesc;
 	D3D11_VIEWPORT viewport;
 	float fieldOfView, screenAspect;
 
 
+	// 1. 시작
 	// Store the vsync setting.
 	m_vsync_enabled = vsync;
 
-	// Create a DirectX graphics interface factory.
+	// Create a DirectX graphics interface factory. factory - hardware
+	// Interface를 거쳐야한다. Interface - 통로
 	result = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory);
 	if(FAILED(result))
 	{
@@ -64,6 +78,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	// Use the factory to create an adapter for the primary graphics interface (video card).
+	// 그래픽 카드가 몇 개 있는지 센다. primary graphics 
 	result = factory->EnumAdapters(0, &adapter);
 	if(FAILED(result))
 	{
@@ -71,6 +86,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	// Enumerate the primary adapter output (monitor).
+	// 출력 관련된 모드가 몇개인지 전부 센다. (어디까지 지원가능한지) 
 	result = adapter->EnumOutputs(0, &adapterOutput);
 	if(FAILED(result))
 	{
@@ -85,6 +101,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	// Create a list to hold all the possible display modes for this monitor/video card combination.
+	// 모드들을 배열로 받아온다. 사용하는 모니터, 그래픽 카드에 따라 다 다름.
 	displayModeList = new DXGI_MODE_DESC[numModes];
 	if(!displayModeList)
 	{
@@ -92,6 +109,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	// Now fill the display mode list structures.
+	// 정보를 넣는다.
 	result = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, displayModeList);
 	if(FAILED(result))
 	{
@@ -100,6 +118,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
 	// Now go through all the display modes and find the one that matches the screen width and height.
 	// When a match is found store the numerator and denominator of the refresh rate for that monitor.
+	// 해상도 확인, 주사율 확인
 	for(i=0; i<numModes; i++)
 	{
 		if(displayModeList[i].Width == (unsigned int)screenWidth)
@@ -113,6 +132,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	// Get the adapter (video card) description.
+	// 그래픽 카드 정보를 얻어옴. 중요한 부분 1. 메모리, 2. GPU 처리 속도
 	result = adapter->GetDesc(&adapterDesc);
 	if(FAILED(result))
 	{
@@ -120,15 +140,18 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	// Store the dedicated video card memory in megabytes.
+	// 그래픽 카드 메모리를 메가바이트로
 	m_videoCardMemory = (int)(adapterDesc.DedicatedVideoMemory / 1024 / 1024);
 
 	// Convert the name of the video card to a character array and store it.
+	// 그래픽 카드 이름
 	error = wcstombs_s(&stringLength, m_videoCardDescription, 128, adapterDesc.Description, 128);
 	if(error != 0)
 	{
 		return false;
 	}
 
+	// 임시로 생성했던 것 들을 전부 해제
 	// Release the display mode list.
 	delete [] displayModeList;
 	displayModeList = 0;
@@ -144,6 +167,9 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Release the factory.
 	factory->Release();
 	factory = 0;
+	// 1. 끝
+
+
 
 	// Initialize the swap chain description.
     ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
