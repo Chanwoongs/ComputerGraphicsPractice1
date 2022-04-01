@@ -33,7 +33,7 @@ using namespace DirectX;
 // Class name: D3DClass
 ////////////////////////////////////////////////////////////////////////////////
 // D3D안에 있는 동적할당은 모두 16비트를 사용해라. D3D data를 16비트로 끊어서 GPU에 전달 해줘야 한다. GPU는 메모리를 함부로 만질 수 없다.
-// 큰 데이터를 일정한 단위로 처리하면 가속을 받을 수 있다. 그게 16비트이다.
+// 큰 데이터를 일정한 단위로 처리하면 가속을 받을 수 있다. 그게 16비트이다. 메모리 정렬
 class D3DClass : public AlignedAllocationPolicy<16>
 {
 public:
@@ -77,6 +77,7 @@ private:
 	ID3D11RasterizerState* m_rasterState;
 
 	// XM = DirectX Math
+	// 클래스 안에서 선언할 때는 메모리 정렬 필요
 	XMMATRIX m_projectionMatrix;
 	XMMATRIX m_worldMatrix;
 	XMMATRIX m_orthoMatrix;
