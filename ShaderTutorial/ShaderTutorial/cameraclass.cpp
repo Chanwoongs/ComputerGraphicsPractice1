@@ -54,6 +54,7 @@ XMFLOAT3 CameraClass::GetRotation()
 }
 
 // This uses the position and rotation of the camera to build and to update the view matrix.
+// 카메라 pos, rot이 변경되었을때 viewMatrix를 Update 해주는 함수
 void CameraClass::Render()
 {
 	XMVECTOR up, position, lookAt;
@@ -61,19 +62,22 @@ void CameraClass::Render()
 	XMMATRIX rotationMatrix;
 
 	// Setup the vector that points upwards.
+	// UpVector
 	up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	// Setup the position of the camera in the world.
 	position = XMLoadFloat3(&m_position);
 
 	// Setup where the camera is looking by default.
+	// LookAtVector
 	lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 
 	// Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians.
-	pitch = m_rotation.x * 0.0174532925f;
+	pitch = m_rotation.x * 0.0174532925f; // radian 값
 	yaw   = m_rotation.y * 0.0174532925f;
 	roll  = m_rotation.z * 0.0174532925f;
 
+	// 위의 것들을 view matrix로 변환
 	// Create the rotation matrix from the yaw, pitch, and roll values.
 	rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 

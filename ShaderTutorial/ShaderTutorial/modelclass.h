@@ -16,13 +16,14 @@ using namespace DirectX;
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ModelClass
 ////////////////////////////////////////////////////////////////////////////////
-class ModelClass
+class ModelClass 
 {
 private:
 	struct VertexType
 	{
 		XMFLOAT3 position;
 	    XMFLOAT4 color;
+		// 정보는 얼마든지 더 추가될 수 있다.
 	};
 
 public:
@@ -42,6 +43,7 @@ private:
 	void RenderBuffers(ID3D11DeviceContext*);
 
 private:
+	// vertexBuffer -> vertex list, indexBuffer -> order of vertex for triangle
 	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
 	int m_vertexCount, m_indexCount;
 };
