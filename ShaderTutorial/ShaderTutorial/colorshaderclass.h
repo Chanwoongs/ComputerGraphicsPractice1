@@ -10,7 +10,7 @@
 //////////////
 #include <d3d11.h>
 #include <directxmath.h>
-#include <d3dcompiler.h>
+#include <d3dcompiler.h> // .vs, .ps를 compile 해주는 compiler
 
 #include <fstream>
 
@@ -26,6 +26,7 @@ private:
 	// Here is the definition of the cBuffer type that will be used with the vertex 
 	// shader. This typedef must be exactly the same as the one in the vertex shader 
 	// as the model data needs to match the typedefs in the shader for proper rendering.
+	// vs에서 직접 수정을 할 수 없는 Data를 여기서 수정하여 전달.
 	struct MatrixBufferType
 	{
 		XMMATRIX world;

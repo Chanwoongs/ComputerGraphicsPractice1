@@ -29,7 +29,7 @@ bool ColorShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 
 
 	// Initialize the vertex and pixel shaders.
-	result = InitializeShader(device, hwnd, L"./data/color.vs", L"./data/color.ps");
+	result = InitializeShader(device, hwnd, L"./data/color.vs", L"./data/color.ps"); // shader file의 위치를 알려준다(변경가능)
 	if(!result)
 	{
 		return false;
@@ -100,7 +100,8 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	vertexShaderBuffer = 0;
 	pixelShaderBuffer = 0;
 
-    // Compile the vertex shader code.
+    // Compile the vertex shader code. file로 부터 읽어옴. 5.0->D3D11.
+	// 결과는 vertecShaderBuffer에 들어감
 	result = D3DCompileFromFile(vsFilename, NULL, NULL, "ColorVertexShader", "vs_5_0", 
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
 
@@ -177,6 +178,9 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	// 서로 다른 입력 슬롯들로부터 입력된 성분들을 조합해서 정점을 생성함.
 	// - AligendByteOffset: 입력 슬롯을 하나만 사용하는 경우 c++정점 구조체의 시작 위치와 이 정점 
 	// 성분의 시작 위치 사이의 오프셋(바이트 단위)임.
+	// channel을 통해 device 사이의 연결을 하고
+	// GPU가 받을 수 있는 구조로 Packing하는 작업 -> Layout
+	// 현재 modelclass에 2개의 정보가 있기 때문에 크기 2의 배열
 	polygonLayout[0].SemanticName = "POSITION";
 	polygonLayout[0].SemanticIndex = 0;
 	polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -212,7 +216,8 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	pixelShaderBuffer = 0;
 
     // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
-	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;				// The buffer is updated each frame.
+	// GPU 쪽에 저장할 버퍼 만들어주기
+	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;				// The buffer is updated each frame, so use DYNAMIC buffer not static buffer
 	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
     matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	// Writing data by CPU
@@ -301,6 +306,7 @@ void ColorShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 
 // The sets up the global variables in the shader. The transfom matrices are sent into the 
 // vertex shader during the Render function call.
+// 준비된 정보들을 GPU에 전달하는 함수
 bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix)
 {
@@ -311,11 +317,12 @@ bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 
 
 	// Transpose the matrices to prepare them for the shader.
+	// 전치 (행과 열을 뒤바꿔줌)
 	worldMatrix = XMMatrixTranspose(worldMatrix);
 	viewMatrix = XMMatrixTranspose(viewMatrix);
 	projectionMatrix = XMMatrixTranspose(projectionMatrix);
 
-	// Lock the constant buffer so it can be written to.
+	// Lock the constant buffer so it can be written to. Map->닫혀있는 GPU를 연다.
 	result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if(FAILED(result))
 	{
@@ -330,7 +337,7 @@ bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->view = viewMatrix;
 	dataPtr->projection = projectionMatrix;
 
-	// Unlock the constant buffer.
+	// Unlock the constant buffer. 다시 닫아준다.
     deviceContext->Unmap(m_matrixBuffer, 0);
 
 	// Set the position of the constant buffer in the vertex shader.

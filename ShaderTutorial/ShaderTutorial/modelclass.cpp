@@ -196,7 +196,7 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	stride = sizeof(VertexType); 
 	offset = 0;
     
-	// deviceContext -> Gpu에 무엇을 할 때
+	// deviceContext -> GPU에 무엇을 할 때
 	// Set the vertex buffer to active in the input assembler so it can be rendered.
 	// VertexBuffer 전달
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
