@@ -73,9 +73,11 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 
 
 	// Set the number of vertices in the vertex array.
+	// vertex 갯수 설정
 	m_vertexCount = 3;
 
 	// Set the number of indices in the index array.
+	// index 갯수 설정
 	m_indexCount = 3;
 
 	// Create the vertex array.
@@ -93,6 +95,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	}
 
 	// Load the vertex array with data.
+	// 도형 그리기 위해 추가
 	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
 	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f); // 0.0f ~ 1.0f
 	

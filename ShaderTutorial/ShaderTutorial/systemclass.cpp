@@ -127,6 +127,7 @@ void SystemClass::Run()
 }
 
 
+// input Ã³¸®
 bool SystemClass::Frame()
 {
 	bool result;

@@ -37,6 +37,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Initialize the Direct3D object.
 	result = m_D3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
+	// 그릴 도화지 만듦
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize Direct3D.", L"Error", MB_OK);
@@ -69,7 +70,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Create the color shader object.
-	m_ColorShader = new ColorShaderClass;
+	m_ColorShader = new ColorShaderClass; // 쉐이더 파일을 읽어들이고 컴파일해서 모델 클래스에서 준 정보를 변형
 	if(!m_ColorShader)
 	{
 		return false;
@@ -146,7 +147,7 @@ bool GraphicsClass::Render()
 	bool result;
 
 
-	// Clear the buffers to begin the scene.
+	// Clear the buffers to begin the scene. Background color
 	m_D3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Generate the view matrix based on the camera's position.

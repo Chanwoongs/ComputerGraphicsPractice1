@@ -90,7 +90,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	ID3D10Blob* errorMessage;
 	ID3D10Blob* vertexShaderBuffer;
 	ID3D10Blob* pixelShaderBuffer;
-	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
+	D3D11_INPUT_ELEMENT_DESC polygonLayout[2]; // 확장된다.
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
 
@@ -165,7 +165,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	// 부연 설명:
 	// - SemanticName: 성분에 부여된 문자열 이름, 정점 셰이더에서 semantic 이름으로 쓰이므로 
 	// 반드시 유효한 변수 이름을 사용해야함. semantic은 정점 구조체의 성분을 정점 셰이더 입력 
-	// 서명과 대응시키는 역활을 함.
+	// 서명과 대응시키는 역할을 함.
 	// - SemanticIndex: semantic에 부여된 Index, 하나의 정점 구조체에 텍스처 좌표가 여러 개 있는 
 	// 경우 각 텍스처 좌표마다 개별적인 semantic 이름을 부여하는 대신 이처럼 index을 통해서 
 	// 각각을 구별할 수 있음. 셰이더 코드에서 index가 지정되지 않은 Semantic은 index가 0인 
@@ -353,6 +353,7 @@ bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 // the format of the data in the vertex buffer. 
 // Second, this sets the vertex and pixel shaders to render the vertex buffer by calling the 
 // DrawIndexed DirectX 11 function using the D3D device context.
+// 그려라.
 void ColorShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
 	// Set the vertex input layout.

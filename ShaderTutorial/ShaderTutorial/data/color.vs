@@ -10,7 +10,7 @@
 // Logically organizing these buffers is important for efficient execution of 
 // shaders as well as how the graphics card will store the buffers. 
 /////////////
-cbuffer MatrixBuffer
+cbuffer MatrixBuffer // cbuffer -> 전역으로 사용하겠다. (자주 사용해야 하기 떄문에)
 {
 	matrix worldMatrix;
 	matrix viewMatrix;
@@ -29,7 +29,7 @@ cbuffer MatrixBuffer
 //////////////
 struct VertexInputType
 {
-    float4 position : POSITION;
+    float4 position : POSITION; // : POSITION -> Semantic
     float4 color : COLOR;
 };
 
@@ -59,7 +59,7 @@ PixelInputType ColorVertexShader(VertexInputType input)
     input.position.w = 1.0f;
 
 	// Calculate the position of the vertex against the world, view, and projection matrices.
-    output.position = mul(input.position, worldMatrix);
+    output.position = mul(input.position, worldMatrix); // mul -> multi 벡터와 행렬을 곱해준다.
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
     
