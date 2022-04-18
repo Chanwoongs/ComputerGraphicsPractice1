@@ -2,6 +2,10 @@
 // Filename: color.ps
 ////////////////////////////////////////////////////////////////////////////////
 
+cbuffer ColorBuffer
+{
+    float brightnessNum;
+}
 
 //////////////
 // TYPEDEFS //
@@ -12,7 +16,6 @@ struct PixelInputType
     float4 color : COLOR;
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Pixel Shader
 // The pixel shader draws each pixel on the polygons that will be rendered to the 
@@ -20,5 +23,5 @@ struct PixelInputType
 ////////////////////////////////////////////////////////////////////////////////
 float4 ColorPixelShader(PixelInputType input) : SV_TARGET // color의 변경 가능
 {
-    return input.color;
+    return input.color * brightnessNum;
 }

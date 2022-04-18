@@ -10,6 +10,7 @@ ColorShaderClass::ColorShaderClass()
 	m_pixelShader = 0;
 	m_layout = 0;
 	m_matrixBuffer = 0;
+	m_colorBuffer = 0;
 }
 
 
@@ -50,13 +51,12 @@ void ColorShaderClass::Shutdown()
 // This first sets the parameters inside the shader, and then draws the triangle 
 // using the HLSL shader.
 bool ColorShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
-	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix)
+	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, float brightnessNum)
 {
 	bool result;
 
-
 	// Set the shader parameters that it will use for rendering.
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix);
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, brightnessNum);
 	if(!result)
 	{
 		return false;
@@ -93,6 +93,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2]; // 확장된다.
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC colorBufferDesc;
 
 
 	// Initialize the pointers this function will use to null.
@@ -231,6 +232,22 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 		return false;
 	}
 
+	// Setup the description of the dynamic matrix constant buffer that is in the pixel shader.
+	// GPU 쪽에 저장할 버퍼 만들어주기
+	colorBufferDesc.Usage = D3D11_USAGE_DYNAMIC;				// The buffer is updated each frame, so use DYNAMIC buffer not static buffer
+	colorBufferDesc.ByteWidth = sizeof(ColorBufferType) * 4;
+	colorBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	colorBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	// Writing data by CPU
+	colorBufferDesc.MiscFlags = 0;
+	colorBufferDesc.StructureByteStride = 0;
+
+	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
+	result = device->CreateBuffer(&colorBufferDesc, NULL, &m_colorBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -242,6 +259,13 @@ void ColorShaderClass::ShutdownShader()
 	{
 		m_matrixBuffer->Release();
 		m_matrixBuffer = 0;
+	}
+	
+	// Release the matrix constant buffer.
+	if(m_colorBuffer)
+	{
+		m_colorBuffer->Release();
+		m_colorBuffer = 0;
 	}
 
 	// Release the layout.
@@ -308,13 +332,14 @@ void ColorShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 // vertex shader during the Render function call.
 // 준비된 정보들을 GPU에 전달하는 함수
 bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
-	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix)
+	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, float brightnessNum)
 {
 	HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-	MatrixBufferType* dataPtr;
+    D3D11_MAPPED_SUBRESOURCE mappedResource1;
+	MatrixBufferType* matrixDataPtr;
+	ColorBufferType* colorDataPtr;
 	unsigned int bufferNumber;
-
 
 	// Transpose the matrices to prepare them for the shader.
 	// 전치 (행과 열을 뒤바꿔줌)
@@ -330,12 +355,12 @@ bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	}
 
 	// Get a pointer to the data in the constant buffer.
-	dataPtr = (MatrixBufferType*)mappedResource.pData;
+	matrixDataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->world = worldMatrix;
-	dataPtr->view = viewMatrix;
-	dataPtr->projection = projectionMatrix;
+	matrixDataPtr->world = worldMatrix;
+	matrixDataPtr->view = viewMatrix;
+	matrixDataPtr->projection = projectionMatrix;
 
 	// Unlock the constant buffer. 다시 닫아준다.
     deviceContext->Unmap(m_matrixBuffer, 0);
@@ -344,7 +369,26 @@ bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	bufferNumber = 0;
 
 	// Finanly set the constant buffer in the vertex shader with the updated values.
-    deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
+
+	// Lock the constant buffer so it can be written to. Map->닫혀있는 GPU를 연다.
+	result = deviceContext->Map(m_colorBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource1);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// Get a pointer to the data in the constant buffer.
+	colorDataPtr = (ColorBufferType*)mappedResource1.pData;
+
+	// Copy the matrices into the constant buffer.
+	colorDataPtr->brightnessNum = brightnessNum;
+
+	// Unlock the constant buffer. 다시 닫아준다.
+	deviceContext->Unmap(m_colorBuffer, 0);
+
+	// Finanly set the constant buffer in the vertex shader with the updated values.
+    deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_colorBuffer);
 
 	return true;
 }
@@ -365,6 +409,5 @@ void ColorShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int inde
 
 	// Render the triangle.
 	deviceContext->DrawIndexed(indexCount, 0, 0);
-
 	return;
 }
