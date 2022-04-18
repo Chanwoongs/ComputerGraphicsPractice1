@@ -37,14 +37,38 @@ public:
 	void Shutdown();
 	bool Frame();
 
+	void SetBgColor(float red, float green, float blue, float alpha);
+	void UpdateAngle();
+
+	int GetFillMode();
+	void SetFillMode(int fillMode);
+	bool UpdateFillMode();
+
+	void SetBrightnessNum(float brightnessNum);
+
+	void CreateRS();
 private:
 	bool Render();
 
 private:
 	D3DClass* m_D3D;
 	CameraClass* m_Camera;
-	ModelClass* m_Model;
+	ModelClass* m_Hexagon;
+	ModelClass* m_Star;
+	ModelClass* m_HoleTriangle;
 	ColorShaderClass* m_ColorShader;
+
+	ID3D11RasterizerState* m_solidModeState;
+	ID3D11RasterizerState* m_wireFrameModeState;
+
+	float m_bgColor[4];
+	float m_angle;
+	float m_brightnessNum;
+
+	int m_fillMode;
+
+
+
 };
 
 #endif
