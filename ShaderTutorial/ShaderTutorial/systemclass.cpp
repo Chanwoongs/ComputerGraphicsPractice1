@@ -105,7 +105,7 @@ void SystemClass::Run()
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
+ 
 		// If windows signals to end the application then exit out.
 		if(msg.message == WM_QUIT)
 		{
@@ -132,6 +132,47 @@ bool SystemClass::Frame()
 {
 	bool result;
 
+	// rÅ°¸¦ ´­·¶À» ¶§, background color -> red
+	if (m_Input->IsKeyDown(82))
+	{
+		m_Graphics->SetBgColor(1.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+	// gÅ°¸¦ ´­·¶À» ¶§, background color -> green
+	if (m_Input->IsKeyDown(71))
+	{
+		m_Graphics->SetBgColor(0.0f, 1.0f, 0.0f, 1.0f);
+	}
+
+	// rÅ°¸¦ ´­·¶À» ¶§, background color -> blue
+	if (m_Input->IsKeyDown(66))
+	{
+		m_Graphics->SetBgColor(0.0f, 0.0f, 1.0f, 1.0f);
+	}
+
+	// wÅ°¸¦ ´­·¶À» ¶§, fill mode -> wireframe
+	if (m_Input->IsKeyDown(87))
+	{
+		m_Graphics->SetFillMode(1);
+	}
+
+	// wÅ°¸¦ ´­·¶À» ¶§, fill mode -> solid
+	if (m_Input->IsKeyDown(83))
+	{
+		m_Graphics->SetFillMode(0);
+	}
+
+	// 1Å°¸¦ ´­·¶À» ¶§, full brightness
+	if (m_Input->IsKeyDown(49))
+	{
+		m_Graphics->SetBrightnessNum(1.0f);
+	}
+
+	// 2Å°¸¦ ´­·¶À» ¶§, half brightness
+	if (m_Input->IsKeyDown(50))
+	{
+		m_Graphics->SetBrightnessNum(0.5f);
+	}
 
 	// Check if the user pressed escape and wants to exit the application.
 	if(m_Input->IsKeyDown(VK_ESCAPE))
