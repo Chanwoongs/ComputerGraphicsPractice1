@@ -166,8 +166,6 @@
     <ClCompile Include="textureshaderclass.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\color.ps" />
-    <None Include="data\color.vs" />
     <None Include="data\texture.ps" />
     <None Include="data\texture.vs" />
   </ItemGroup>

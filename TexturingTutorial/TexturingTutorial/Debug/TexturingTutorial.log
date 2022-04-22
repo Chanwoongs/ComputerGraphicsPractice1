@@ -1,13 +1,11 @@
 ﻿  cameraclass.cpp
-  colorshaderclass.cpp
   d3dclass.cpp
-  DDSTextureLoader.cpp
   graphicsclass.cpp
-  inputclass.cpp
   main.cpp
   modelclass.cpp
   systemclass.cpp
   textureclass.cpp
   textureshaderclass.cpp
   코드를 생성하고 있습니다...
+  LINK : C:\Users\B409_22\Desktop\ComputerGraphicsPractice1\TexturingTutorial\Debug\TexturingTutorial.exe을(를) 찾을 수 없거나 마지막 증분 링크에 의해 빌드되지 않았습니다. 전체 링크를 수행하고 있습니다.
   TexturingTutorial.vcxproj -> C:\Users\B409_22\Desktop\ComputerGraphicsPractice1\TexturingTutorial\Debug\TexturingTutorial.exe

@@ -28,7 +28,7 @@ cbuffer MatrixBuffer
 struct VertexInputType
 {
     float4 position : POSITION;
-    float2 tex : TEXCOORD0;
+    float2 tex : TEXCOORD0; // 한장이기 때문에 0
 };
 
 struct PixelInputType

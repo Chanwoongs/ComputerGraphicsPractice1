@@ -190,6 +190,7 @@ bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 		return false;
 	}
 
+	// 필터 설정
 	// Create a texture sampler state description.
 	// The sampler state description is setup here and then can be passed to the pixel shader after. 
 	// The most important element of the texture sampler description is Filter. Filter will determine 
@@ -342,7 +343,7 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
     deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
 	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
+	deviceContext->PSSetShaderResources(0, 1, &texture); // 사용할 resource, DDS file 정보
 
 	return true;
 }
@@ -358,7 +359,7 @@ void TextureShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int in
     deviceContext->PSSetShader(m_pixelShader, NULL, 0);
 
 	// Set the sampler state in the pixel shader.
-	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
+	deviceContext->PSSetSamplers(0, 1, &m_sampleState); // 어떤 필터로 그릴거냐, m_sampleState로
 
 	// Render the triangle.
 	deviceContext->DrawIndexed(indexCount, 0, 0);

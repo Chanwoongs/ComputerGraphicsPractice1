@@ -18,8 +18,8 @@
 // the TextureShaderClass also and then attach it to the resource pointer so this pixel 
 // shader can use it to determine which sample of pixels to draw.
 /////////////
-Texture2D shaderTexture;
-SamplerState SampleType;
+Texture2D shaderTexture; // shader resource view 버퍼 정보
+SamplerState SampleType; // 필터 종류
 
 
 //////////////
@@ -46,6 +46,8 @@ float4 TexturePixelShader(PixelInputType input) : SV_TARGET
 
     // Sample the pixel color from the texture using the sampler at this texture coordinate location.
     textureColor = shaderTexture.Sample(SampleType, input.tex);
+
+    // 이곳에 다양한 효과를 추가할 수 있다.
 
     return textureColor;
 }
