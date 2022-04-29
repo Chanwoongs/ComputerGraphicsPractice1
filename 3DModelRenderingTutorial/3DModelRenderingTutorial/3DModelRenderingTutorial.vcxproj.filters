@@ -85,14 +85,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\chair_d.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\seafloor.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="data\color.ps">
       <Filter>리소스 파일</Filter>
     </None>
@@ -113,5 +105,13 @@
     <Object Include="data\chair.obj">
       <Filter>리소스 파일</Filter>
     </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="data\seafloor.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\chair_d.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
 </Project>

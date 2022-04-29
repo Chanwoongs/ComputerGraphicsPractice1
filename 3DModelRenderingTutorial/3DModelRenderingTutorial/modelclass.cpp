@@ -116,6 +116,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	}
 
 	// Load the vertex array and index array with data.
+	// 로딩이 너무 오래걸릴경우 바로 정보를 넣는 방법 강구
 	for (i = 0; i < m_vertexCount; i++)
 	{
 		vertices[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
@@ -378,6 +379,7 @@ bool ModelClass::LoadDataStructures(const WCHAR* filename, int vertexCount, int 
 		return false;
 	}
 
+	// 파싱 할때 정보가 다를수 있기 때문에 예외처리 해야함
 	// Read in the vertices, texture coordinates, and normals into the data structures.
 	// Important: Also convert to left hand coordinate system since Maya uses right hand coordinate system.
 	fin.get(input);
