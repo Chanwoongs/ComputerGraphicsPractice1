@@ -21,7 +21,7 @@ struct VertexInputType
 {
     float4 position : POSITION;
     float2 tex : TEXCOORD0;
-	float3 instancePosition : TEXCOORD1;
+	float3 instancePosition : TEXCOORD1; // instance용 sementic이 존재하지 않으므로 TEXCOORD 사용
 };
 
 struct PixelInputType

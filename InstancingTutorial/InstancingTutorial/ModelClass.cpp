@@ -114,7 +114,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	vertices = 0;
 
 	// 배열의 인스턴스 수를 설정합니다.
-	m_instanceCount = 4;
+	m_instanceCount = 8;
 
 	// 인스턴스 배열을 만듭니다.
 	InstanceType* instances = new InstanceType[m_instanceCount];
@@ -123,11 +123,16 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 		return false;
 	}
 
+	// 더 효율적이려면 아래 정보들은 파일에서 가져온다. obj파일은 불가능. fbx파일은 scene파일이라 가능
 	// 데이터로 인스턴스 배열을 로드합니다.
 	instances[0].position = XMFLOAT3(-1.5f, -1.5f, 5.0f);
 	instances[1].position = XMFLOAT3(-1.5f,  1.5f, 5.0f);
 	instances[2].position = XMFLOAT3( 1.5f, -1.5f, 5.0f);
 	instances[3].position = XMFLOAT3( 1.5f,  1.5f, 5.0f);
+	instances[4].position = XMFLOAT3( 2.5f,  1.5f, 5.0f);
+	instances[5].position = XMFLOAT3( 1.5f,  2.5f, 5.0f);
+	instances[6].position = XMFLOAT3( -2.5f,  1.5f, 5.0f);
+	instances[7].position = XMFLOAT3( 1.5f,  -2.5f, 5.0f);
 
 	// 인스턴스 버퍼의 설명을 설정합니다.
 	D3D11_BUFFER_DESC instanceBufferDesc;

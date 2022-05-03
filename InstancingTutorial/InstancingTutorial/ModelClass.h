@@ -11,7 +11,7 @@ private:
 		XMFLOAT2 texture;
 	};
 
-	struct InstanceType
+	struct InstanceType // instance에 필요한 정보 추가 가능
 	{
 		XMFLOAT3 position;
 	};
