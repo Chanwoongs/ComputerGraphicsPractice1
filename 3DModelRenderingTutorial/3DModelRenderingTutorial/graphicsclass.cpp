@@ -62,7 +62,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the model object.
-	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
+	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/Man.obj", L"./data/ManBaseColor.dds");
 //	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/chair.obj", L"./data/chair_d.dds");
 	if(!result)
 	{
@@ -176,7 +176,7 @@ bool GraphicsClass::Render(float rotation)
 
 	// Render the model using the texture shader.
 	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), 
-		worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
+		worldMatrix * XMMatrixScaling(0.05f, 0.05f, 0.05f) , viewMatrix, projectionMatrix, m_Model->GetTexture());
 	if(!result)
 	{
 		return false;

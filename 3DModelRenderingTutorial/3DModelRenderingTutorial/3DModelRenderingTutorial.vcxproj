@@ -172,10 +172,7 @@
     <None Include="data\texture.vs" />
   </ItemGroup>
   <ItemGroup>
-    <Object Include="data\chair.obj" />
-    <Object Include="data\cube.obj" />
-  </ItemGroup>
-  <ItemGroup>
+    <Image Include="data\BaseColor.dds" />
     <Image Include="data\chair_d.dds" />
     <Image Include="data\seafloor.dds" />
   </ItemGroup>
