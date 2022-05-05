@@ -10,7 +10,10 @@ TextureShaderClass::TextureShaderClass()
 	m_pixelShader = 0;
 	m_layout = 0;
 	m_matrixBuffer = 0;
+	m_numBuffer = 0;
 	m_sampleState = 0;
+	m_numOfTextureTiles = 1;
+	m_filterModeNum = 1;
 }
 
 
@@ -79,6 +82,7 @@ bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC numBufferDesc;
     D3D11_SAMPLER_DESC samplerDesc;
 
 
@@ -185,7 +189,20 @@ bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
-	if(FAILED(result))
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	numBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	numBufferDesc.ByteWidth = sizeof(NumBufferType);
+	numBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	numBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	numBufferDesc.MiscFlags = 0;
+	numBufferDesc.StructureByteStride = 0;
+	
+	result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_numBuffer);
+	if (FAILED(result))
 	{
 		return false;
 	}
@@ -200,7 +217,7 @@ bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	// AddressUand AddressV are set to Wrap which ensures that the coordinates stay between 0.0f and 
 	// 1.0f. Anything outside of that wraps around and is placed between 0.0f and 1.0f. All other 
 	// settings for the sampler state description are defaults.
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
     samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -225,6 +242,57 @@ bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 }
 
 
+// 필터 모드 변경
+bool TextureShaderClass::UpdateFilter(ID3D11Device* device, int modeNum)
+{
+	HRESULT result;
+	D3D11_SAMPLER_DESC samplerDesc;
+
+	m_filterModeNum = modeNum;
+
+	// Point Filter
+	if (m_filterModeNum == 1)
+	{
+		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	}
+	// Linear Filter
+	else if (m_filterModeNum == 2)
+	{
+		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+	}
+	// Anisotropic Filter
+	else if (m_filterModeNum == 3)
+	{
+		samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	}
+	// Maximum Anisotropic Filter
+	else if (m_filterModeNum == 4)
+	{
+		samplerDesc.Filter = D3D11_FILTER_MAXIMUM_ANISOTROPIC;
+	}
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 void TextureShaderClass::ShutdownShader()
 {
 	// Release the sampler state.
@@ -239,6 +307,11 @@ void TextureShaderClass::ShutdownShader()
 	{
 		m_matrixBuffer->Release();
 		m_matrixBuffer = 0;
+	}
+	if (m_numBuffer)
+	{
+		m_numBuffer->Release();
+		m_numBuffer = 0;
 	}
 
 	// Release the layout.
@@ -307,8 +380,10 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 											 XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
 {
 	HRESULT result;
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-	MatrixBufferType* dataPtr;
+    D3D11_MAPPED_SUBRESOURCE mappedResource0;
+    D3D11_MAPPED_SUBRESOURCE mappedResource1;
+	MatrixBufferType* MatrixDataPtr;
+	NumBufferType* NumDataPtr;
 	unsigned int bufferNumber;
 
 
@@ -318,19 +393,19 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	projectionMatrix = XMMatrixTranspose(projectionMatrix);
 
 	// Lock the constant buffer so it can be written to.
-	result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource0);
 	if(FAILED(result))
 	{
 		return false;
 	}
 
 	// Get a pointer to the data in the constant buffer.
-	dataPtr = (MatrixBufferType*)mappedResource.pData;
+	MatrixDataPtr = (MatrixBufferType*)mappedResource0.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->world = worldMatrix;
-	dataPtr->view = viewMatrix;
-	dataPtr->projection = projectionMatrix;
+	MatrixDataPtr->world = worldMatrix;
+	MatrixDataPtr->view = viewMatrix;
+	MatrixDataPtr->projection = projectionMatrix;
 
 	// Unlock the constant buffer.
     deviceContext->Unmap(m_matrixBuffer, 0);
@@ -340,6 +415,27 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	// Now set the constant buffer in the vertex shader with the updated values.
     deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
+
+	// Lock the constant buffer so it can be written to.
+	result = deviceContext->Map(m_numBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource1);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// Get a pointer to the data in the constant buffer.
+	NumDataPtr = (NumBufferType*)mappedResource1.pData;
+
+	NumDataPtr->numOfTextureTiles = m_numOfTextureTiles;
+
+	// Unlock the constant buffer.
+	deviceContext->Unmap(m_numBuffer, 0);
+
+	// Set the position of the constant buffer in the vertex shader.
+	bufferNumber = 1;
+
+	// Now set the constant buffer in the vertex shader with the updated values.
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_numBuffer);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
@@ -364,4 +460,9 @@ void TextureShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int in
 	deviceContext->DrawIndexed(indexCount, 0, 0);
 
 	return;
+}
+
+void TextureShaderClass::SetNumOfTextureTiles(int numOfTextureTiles)
+{
+	this->m_numOfTextureTiles = numOfTextureTiles;
 }

@@ -33,6 +33,10 @@ private:
 		XMMATRIX view;
 		XMMATRIX projection;
 	};
+	struct NumBufferType
+	{
+		int numOfTextureTiles;
+	};
 
 public:
 	TextureShaderClass();
@@ -42,6 +46,9 @@ public:
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
 	bool Render(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*);
+
+	void SetNumOfTextureTiles(int numOfTextureTiles);
+	bool UpdateFilter(ID3D11Device*, int);
 
 private:
 	bool InitializeShader(ID3D11Device*, HWND, const WCHAR*, const WCHAR*);
@@ -56,7 +63,11 @@ private:
 	ID3D11PixelShader* m_pixelShader;
 	ID3D11InputLayout* m_layout;
 	ID3D11Buffer* m_matrixBuffer;
+	ID3D11Buffer* m_numBuffer;
 	ID3D11SamplerState* m_sampleState;
+
+	int m_numOfTextureTiles;
+	int m_filterModeNum;
 };
 
 #endif
