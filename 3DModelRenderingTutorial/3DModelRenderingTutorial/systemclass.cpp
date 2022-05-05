@@ -131,11 +131,30 @@ bool SystemClass::Frame()
 {
 	bool result;
 
-
 	// Check if the user pressed escape and wants to exit the application.
 	if(m_Input->IsKeyDown(VK_ESCAPE))
 	{
 		return false;
+	}
+	// 3번을 누르면 Point Filter로 변경
+	if (m_Input->IsKeyDown(51))
+	{
+		m_Graphics->UpdateFilter(1);
+	}
+	// 4번을 누르면 Linear Filter로 변경
+	if (m_Input->IsKeyDown(52))
+	{
+		m_Graphics->UpdateFilter(2);
+	}
+	// 5번을 누르면 Anisotropic Filter로 변경
+	if (m_Input->IsKeyDown(53))
+	{
+		m_Graphics->UpdateFilter(3);
+	}
+	// 6번을 누르면 Anisotropic Filter로 변경
+	if (m_Input->IsKeyDown(54))
+	{
+		m_Graphics->UpdateFilter(4);
 	}
 
 	// Do the frame processing for the graphics object.
@@ -235,8 +254,8 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	else
 	{
 		// If windowed then set it to 800x600 resolution.
-		screenWidth  = 800;
-		screenHeight = 600;
+		screenWidth  = 1600;
+		screenHeight = 1200;
 
 		// Place the window in the middle of the screen.
 		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth)  / 2;
