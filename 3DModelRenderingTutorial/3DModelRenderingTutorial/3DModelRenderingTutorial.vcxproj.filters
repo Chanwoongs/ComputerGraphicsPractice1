@@ -99,13 +99,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\seafloor.dds">
+    <Image Include="data\WarriorBaseColor.dds">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="data\chair_d.dds">
+    <Image Include="data\GiantBaseColor.dds">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="data\BaseColor.dds">
+    <Image Include="data\ManBaseColor.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Plane.dds">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

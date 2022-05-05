@@ -172,9 +172,10 @@
     <None Include="data\texture.vs" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\BaseColor.dds" />
-    <Image Include="data\chair_d.dds" />
-    <Image Include="data\seafloor.dds" />
+    <Image Include="data\GiantBaseColor.dds" />
+    <Image Include="data\Plane.dds" />
+    <Image Include="data\ManBaseColor.dds" />
+    <Image Include="data\WarriorBaseColor.dds" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
