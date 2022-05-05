@@ -37,14 +37,20 @@ public:
 	void Shutdown();
 	bool Frame();
 
+	void UpdateFilter(int modeNum);
+
 private:
 	bool Render(float);
 
 private:
 	D3DClass* m_D3D;
 	CameraClass* m_Camera;
-	ModelClass* m_Model;
 	TextureShaderClass* m_TextureShader;
+
+	ModelClass* m_Giant;
+	ModelClass* m_Warrior;
+	ModelClass* m_Man;
+	ModelClass* m_Plane;
 };
 
 #endif

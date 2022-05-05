@@ -8,7 +8,10 @@ GraphicsClass::GraphicsClass()
 {
 	m_D3D = 0;
 	m_Camera = 0;
-	m_Model = 0;
+	m_Giant = 0;
+	m_Warrior = 0;
+	m_Man = 0;
+	m_Plane = 0;
 	m_TextureShader = 0;
 }
 
@@ -21,6 +24,8 @@ GraphicsClass::GraphicsClass(const GraphicsClass& other)
 GraphicsClass::~GraphicsClass()
 {
 }
+
+
 
 
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
@@ -51,20 +56,51 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);	// for cube model
-//	m_Camera->SetPosition(0.0f, 0.5f, -3.0f);	// for chair model
+	m_Camera->SetPosition(0.0f, 10.0f, -100.0f);	
 	
 	// Create the model object.
-	m_Model = new ModelClass;
-	if(!m_Model)
+	m_Giant = new ModelClass;
+	if(!m_Giant)
+	{
+		return false;
+	}
+	m_Warrior = new ModelClass;
+	if (!m_Warrior)
+	{
+		return false;
+	}
+	m_Man = new ModelClass;
+	if (!m_Man)
+	{
+		return false;
+	}
+	m_Plane = new ModelClass;
+	if (!m_Plane)
 	{
 		return false;
 	}
 
 	// Initialize the model object.
-	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/Man.obj", L"./data/ManBaseColor.dds");
-//	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/chair.obj", L"./data/chair_d.dds");
+	result = m_Giant->Initialize(m_D3D->GetDevice(), L"./data/GiantAlien.obj", L"./data/GiantBaseColor.dds");
 	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+	result = m_Warrior->Initialize(m_D3D->GetDevice(), L"./data/AlienWarrior.obj", L"./data/WarriorBaseColor.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+	result = m_Man->Initialize(m_D3D->GetDevice(), L"./data/Man.obj", L"./data/ManBaseColor.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+	result = m_Plane->Initialize(m_D3D->GetDevice(), L"./data/Cube.obj", L"./data/Plane.dds");
+	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
@@ -100,11 +136,23 @@ void GraphicsClass::Shutdown()
 	}
 
 	// Release the model object.
-	if(m_Model)
+	if(m_Giant)
 	{
-		m_Model->Shutdown();
-		delete m_Model;
-		m_Model = 0;
+		m_Giant->Shutdown();
+		delete m_Giant;
+		m_Giant = 0;
+	}
+	if (m_Warrior)
+	{
+		m_Warrior->Shutdown();
+		delete m_Warrior;
+		m_Warrior = 0;
+	}
+	if (m_Man)
+	{
+		m_Man->Shutdown();
+		delete m_Man;
+		m_Man = 0;
 	}
 
 	// Release the camera object.
@@ -134,7 +182,7 @@ bool GraphicsClass::Frame()
 
 
 	// Update the rotation variable each frame.
-	rotation += (float)XM_PI * 0.01f;
+	rotation += (float)XM_PI * 0.001f;
 	if (rotation > 360.0f)
 	{
 		rotation -= 360.0f;
@@ -150,6 +198,10 @@ bool GraphicsClass::Frame()
 	return true;
 }
 
+void GraphicsClass::UpdateFilter(int modeNum)
+{
+	m_TextureShader->UpdateFilter(m_D3D->GetDevice(), modeNum);
+}
 
 bool GraphicsClass::Render(float rotation)
 {
@@ -171,13 +223,40 @@ bool GraphicsClass::Render(float rotation)
 	// Rotate the world matrix by the rotation value so that the triangle will spin.
 	worldMatrix = XMMatrixRotationY(rotation);
 
-	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	m_Model->Render(m_D3D->GetDeviceContext());
+	m_TextureShader->SetNumOfTextureTiles(1);
 
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_Giant->Render(m_D3D->GetDeviceContext());
 	// Render the model using the texture shader.
-	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), 
-		worldMatrix * XMMatrixScaling(0.05f, 0.05f, 0.05f) , viewMatrix, projectionMatrix, m_Model->GetTexture());
-	if(!result)
+	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Giant->GetIndexCount(),
+		worldMatrix * XMMatrixScaling(1.0f, 1.0f, 1.0f) * XMMatrixTranslation(0, -10.0f, 0), viewMatrix, projectionMatrix, m_Giant->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	m_Warrior->Render(m_D3D->GetDeviceContext());
+	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Warrior->GetIndexCount(),
+		worldMatrix * XMMatrixScaling(0.05f, 0.05f, 0.05f) * XMMatrixTranslation(-50.0f, 10.0f, 20.0f), viewMatrix, projectionMatrix, m_Warrior->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	m_Man->Render(m_D3D->GetDeviceContext());	
+	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Man->GetIndexCount(),
+		worldMatrix * XMMatrixScaling(0.5f, 0.5f, 0.5f) * XMMatrixTranslation(50.0f, -10.0f, 20.0f), viewMatrix, projectionMatrix, m_Man->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	worldMatrix = XMMatrixRotationY(0);
+	m_TextureShader->SetNumOfTextureTiles(15);
+	m_Plane->Render(m_D3D->GetDeviceContext());
+	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Plane->GetIndexCount(),
+		worldMatrix * XMMatrixScaling(800.0f, 1000.0f, 1.0f) * XMMatrixRotationAxis(XMVectorSet(1, 0, 0, 0), -90.0f) * XMMatrixTranslation(0, 0, 50.0f), viewMatrix, projectionMatrix, m_Plane->GetTexture());
+	if (!result)
 	{
 		return false;
 	}
