@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32413.511
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpecularLightTutorial", "SpecularLightTutorial.vcxproj", "{ED054A19-756F-481E-BC4A-6884F56C389A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Debug|x64.ActiveCfg = Debug|x64
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Debug|x64.Build.0 = Debug|x64
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Debug|x86.ActiveCfg = Debug|Win32
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Debug|x86.Build.0 = Debug|Win32
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Release|x64.ActiveCfg = Release|x64
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Release|x64.Build.0 = Release|x64
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Release|x86.ActiveCfg = Release|Win32
+		{ED054A19-756F-481E-BC4A-6884F56C389A}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AF0AC406-2E69-4299-AC3E-D16DEB2983C1}
+	EndGlobalSection
+EndGlobal
