@@ -34,7 +34,7 @@ private:
 	struct CameraBufferType
 	{
 		XMFLOAT3 cameraPosition;
-		float padding;
+		float padding; // XMFLOAT´Â Ç×»ó 16À¸·Î ³ª´² ¶³¾îÁü
 	};
 
 	struct LightBufferType

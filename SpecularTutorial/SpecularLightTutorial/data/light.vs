@@ -16,7 +16,7 @@ cbuffer MatrixBuffer
 cbuffer CameraBuffer
 {
     float3 cameraPosition;
-	float padding;
+	float padding; // GPU에 넘겨줄때 16byte 단위를 주기위해
 };
 
 
@@ -66,10 +66,10 @@ PixelInputType LightVertexShader(VertexInputType input)
     output.normal = normalize(output.normal);
 
 	// Calculate the position of the vertex in the world.
-    worldPosition = mul(input.position, worldMatrix);
+    worldPosition = mul(input.position, worldMatrix); // Vertex를 world 좌표계로 바꿈
 
     // Determine the viewing direction based on the position of the camera and the position of the vertex in the world.
-    output.viewDirection = cameraPosition.xyz - worldPosition.xyz;
+    output.viewDirection = cameraPosition.xyz - worldPosition.xyz; // E를 구한다. 카메라 위치 - Vertex
 	
     // Normalize the viewing direction vector.
     output.viewDirection = normalize(output.viewDirection);

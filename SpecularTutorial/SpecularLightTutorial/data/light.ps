@@ -27,7 +27,7 @@ struct PixelInputType
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float3 viewDirection : TEXCOORD1;
+	float3 viewDirection : TEXCOORD1; // E를 위한 Sementic
 };
 
 
@@ -68,10 +68,10 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 		color = saturate(color);
 
 		// Calculate the reflection vector based on the light intensity, normal vector, and light direction.
-        reflection = normalize(2 * lightIntensity * input.normal - lightDir); 
+        reflection = normalize(2 * lightIntensity * input.normal - lightDir); // R 계산
 
 		// Determine the amount of specular light based on the reflection vector, viewing direction, and specular power.
-        specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
+        specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower); // specular 만드는 공식
     }
 
     // Multiply the texture pixel and the input color to get the textured result.
