@@ -42,7 +42,7 @@ struct PixelInputType
 	float3 lightPos1 : TEXCOORD1;
 	float3 lightPos2 : TEXCOORD2;
 	float3 lightPos3 : TEXCOORD3;
-	float3 lightPos4 : TEXCOORD4;
+	float3 lightPos4 : TEXCOORD4; // TEXCOORD엔 한계가 있다.
 };
 
 
@@ -76,7 +76,7 @@ PixelInputType LightVertexShader(VertexInputType input)
     worldPosition = mul(input.position, worldMatrix);
 
     // Determine the light positions based on the position of the lights and the position of the vertex in the world.
-    output.lightPos1.xyz = lightPosition[0].xyz - worldPosition.xyz;
+    output.lightPos1.xyz = lightPosition[0].xyz - worldPosition.xyz; // d 구하기
     output.lightPos2.xyz = lightPosition[1].xyz - worldPosition.xyz;
     output.lightPos3.xyz = lightPosition[2].xyz - worldPosition.xyz;
     output.lightPos4.xyz = lightPosition[3].xyz - worldPosition.xyz;

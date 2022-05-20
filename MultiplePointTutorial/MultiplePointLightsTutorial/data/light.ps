@@ -50,7 +50,7 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 	lightIntensity1 = saturate(dot(input.normal, input.lightPos1));
 	lightIntensity2 = saturate(dot(input.normal, input.lightPos2));
 	lightIntensity3 = saturate(dot(input.normal, input.lightPos3));
-	lightIntensity4 = saturate(dot(input.normal, input.lightPos4));
+	lightIntensity4 = saturate(dot(input.normal, input.lightPos4)); // 1/d제곱 적용을 해야 더 실감난다.
 	
 	// Determine the diffuse color amount of each of the four lights.
 	color1 = diffuseColor[0] * lightIntensity1;
