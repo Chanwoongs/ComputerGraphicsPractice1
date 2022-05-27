@@ -8,9 +8,20 @@ GraphicsClass::GraphicsClass()
 {
 	m_D3D = 0;
 	m_Camera = 0;
-	m_Model = 0;
+	m_IronMan = 0;
+	m_TextureShader = 0;
 	m_LightShader = 0;
 	m_Light = 0;
+
+	m_ambient = true;
+	m_diffuse = true;
+	m_specular = true;
+
+	m_ironManCount = 10;
+	m_ironManPosition = new XMFLOAT3[m_ironManCount];
+
+	m_planeCount = 1;
+	m_planePosition = new XMFLOAT3[1];
 }
 
 
@@ -52,20 +63,36 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);	// for cube
+	m_Camera->SetPosition(0.0f, 2.0f, -5.0f);	// for cube
 //	m_Camera->SetPosition(0.0f, 0.5f, -3.0f);	// for chair
 		
 	// Create the model object.
-	m_Model = new ModelClass;
-	if(!m_Model)
+	SetIronManPosition();
+	m_IronMan = new ModelClass(m_ironManPosition, m_ironManCount);
+	if(!m_IronMan)
 	{
 		return false;
 	}
 
 	// Initialize the model object.
-	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
-//	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/chair.obj", L"./data/chair_d.dds");
+	result = m_IronMan->Initialize(m_D3D->GetDevice(), L"./data/ironMan.obj", L"./data/ironMan.dds");
 	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the model object.
+	SetPlanePosition();
+	m_Plane = new ModelClass(m_planePosition, m_planeCount);
+	if (!m_Plane)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_Plane->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/aa.dds");
+	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
@@ -93,29 +120,123 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// Create the texture shader object.
+	m_TextureShader = new TextureShaderClass;
+	if (!m_TextureShader)
+	{
+		return false;
+	}
+
+	// Initialize the texture shader object.
+	result = m_TextureShader->Initialize(m_D3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+
 	// Initialize the light object.
 	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
-//	m_Light->SetAmbientColor(0.0f, 0.0f, 0.0f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-//	m_Light->SetDiffuseColor(0.0f, 0.0f, 0.0f, 1.0f);
-//	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
-//	m_Light->SetDirection(1.0f, 0.0f, 0.0f);
-	m_Light->SetDirection(1.0f, 0.0f, 1.0f);
+	m_Light->SetDirection(1.0f, -0.5f, 1.0f);
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetSpecularPower(32.0f);
 
 	return true;
 }
 
+void GraphicsClass::toggleAmbient()
+{
+	if (m_Light->GetAmbientToggle() == 0.0f)
+	{
+		m_Light->SetToggleAmbient(1.0f);
+	}
+	else
+	{
+		m_Light->SetToggleAmbient(0.0f);
+	}
+}
+
+void GraphicsClass::toggleDiffuse()
+{
+	if (m_Light->GetDiffuseToggle() == 0.0f)
+	{
+		m_Light->SetToggleDiffuse(1.0f);
+	}
+	else
+	{
+		m_Light->SetToggleDiffuse(0.0f);
+	}
+}
+
+void GraphicsClass::toggleSpecular()
+{
+	if (m_Light->GetSpecularToggle() == 0.0f)
+	{
+		m_Light->SetToggleSpecular(1.0f);
+	}
+	else
+	{
+		m_Light->SetToggleSpecular(0.0f);
+	}
+}
+
+void GraphicsClass::SetIronManPosition()
+{
+	m_ironManPosition[0] = XMFLOAT3(0.0f, 0.0f, 2.0f);
+	m_ironManPosition[1] = XMFLOAT3(0.0f, 0.0f, -2.0f);
+	m_ironManPosition[2] = XMFLOAT3(1.0f, 0.0f, 1.5f);
+	m_ironManPosition[3] = XMFLOAT3(1.0f, 0.0f, -1.5f);
+	m_ironManPosition[4] = XMFLOAT3(-1.0f, 0.0f, 1.5f);
+	m_ironManPosition[5] = XMFLOAT3(-1.0f, 0.0f, -1.5f);
+	m_ironManPosition[6] = XMFLOAT3(2.0f, 0.0f, 1.0f);
+	m_ironManPosition[7] = XMFLOAT3(2.0f, 0.0f, -1.0f);
+	m_ironManPosition[8] = XMFLOAT3(-2.0f, 0.0f, 1.0f);
+	m_ironManPosition[9] = XMFLOAT3(-2.0f, 0.0f, -1.0f);
+}
+
+void GraphicsClass::SetPlanePosition()
+{
+	m_planePosition[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+}
+
+CameraClass* GraphicsClass::GetCamera()
+{
+	return m_Camera;
+}
 
 void GraphicsClass::Shutdown()
 {
-	// Release the model object.
-	if(m_Model)
+	if (m_TextureShader)
 	{
-		m_Model->Shutdown();
-		delete m_Model;
-		m_Model = 0;
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
+	}
+
+	// Release the model object.
+	if(m_IronMan)
+	{
+		m_IronMan->Shutdown();
+		delete m_IronMan;
+		m_IronMan = 0;
+	}
+	if (m_ironManPosition)
+	{
+		delete[] m_ironManPosition;
+		m_ironManPosition = 0;
+	}
+	if (m_Plane)
+	{
+		m_Plane->Shutdown();
+		delete m_Plane;
+		m_Plane = 0;
+	}
+	if (m_ironManPosition)
+	{
+		delete[] m_planePosition;
+		m_planePosition = 0;
 	}
 
 	// Release the camera object.
@@ -191,20 +312,31 @@ bool GraphicsClass::Render(float rotation)
 	m_D3D->GetWorldMatrix(worldMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
-	// Rotate the world matrix by the rotation value so that the triangle will spin.
-	worldMatrix = XMMatrixRotationY(rotation);
-
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	m_Model->Render(m_D3D->GetDeviceContext());
+	m_IronMan->Render(m_D3D->GetDeviceContext());
 
 	// Render the model using the light shader.
-	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), 
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_IronMan->GetVertexCount(), m_IronMan->GetInstanceCount(),
 		worldMatrix, viewMatrix, projectionMatrix,
-		m_Model->GetTexture(), 
+		m_IronMan->GetTexture(),
 		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
-	
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower(),
+		m_Light->GetAmbientToggle(), m_Light->GetDiffuseToggle(), m_Light->GetSpecularToggle());
 	if(!result)
+	{
+		return false;
+	}
+
+	m_Plane->Render(m_D3D->GetDeviceContext());
+
+	// Render the model using the light shader.
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_Plane->GetVertexCount(), m_Plane->GetInstanceCount(),
+		worldMatrix * XMMatrixScaling(25.0f, 0.01f, 25.0f) * XMMatrixTranslation(0.0f, 0.0f, 0.0f), viewMatrix, projectionMatrix,
+		m_Plane->GetTexture(),
+		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower(),
+		m_Light->GetAmbientToggle(), m_Light->GetDiffuseToggle(), m_Light->GetSpecularToggle());
+	if (!result)
 	{
 		return false;
 	}

@@ -13,7 +13,7 @@
 #include "modelclass.h"
 #include "lightshaderclass.h"
 #include "lightclass.h"
-
+#include "textureshaderclass.h"
 
 /////////////
 // GLOBALS //
@@ -38,16 +38,39 @@ public:
 	void Shutdown();
 	bool Frame();
 
+	void toggleAmbient();
+	void toggleDiffuse();
+	void toggleSpecular();
+
+	void SetIronManPosition();
+	void SetPlanePosition();
+
+	CameraClass* GetCamera();
+
 private:
 	bool Render(float);
 
 private:
 	D3DClass* m_D3D;
 	CameraClass* m_Camera;
-	ModelClass* m_Model;
+
+	ModelClass* m_IronMan;
+	ModelClass* m_Plane;
+
+	TextureShaderClass* m_TextureShader;
 
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
+
+	bool m_ambient;
+	bool m_diffuse;
+	bool m_specular;
+
+	XMFLOAT3* m_ironManPosition;
+	int m_ironManCount;
+
+	XMFLOAT3* m_planePosition;
+	int m_planeCount;
 };
 
 #endif
