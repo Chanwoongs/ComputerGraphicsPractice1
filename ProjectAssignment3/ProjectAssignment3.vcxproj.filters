@@ -123,5 +123,11 @@
     <Image Include="data\chair_d.dds">
       <Filter>리소스 파일</Filter>
     </Image>
+    <Image Include="data\floor.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\aa.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
 </Project>
