@@ -48,8 +48,13 @@ private:
 		float nx, ny, nz;
 	};
 
+	struct InstanceType // instance에 필요한 정보 추가 가능
+	{
+		XMFLOAT3 position;
+	};
+
 public:
-	ModelClass();
+	ModelClass(XMFLOAT3*, int);
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
@@ -57,12 +62,13 @@ public:
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
+	int GetVertexCount();
 	int GetIndexCount();
+	int GetInstanceCount();
 	ID3D11ShaderResourceView* GetTexture();
 
 	bool LoadModel(const WCHAR*);
 	void ReleaseModel();
-
 
 private:
 	bool InitializeBuffers(ID3D11Device*);
@@ -76,11 +82,13 @@ private:
 	bool LoadDataStructures(const WCHAR*, int, int, int, int);
 
 private:
-	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
-	int m_vertexCount, m_indexCount, m_textureCount, m_normalCount, m_faceCount;
+	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer, *m_instanceBuffer;
+	int m_vertexCount, m_indexCount, m_instanceCount, m_textureCount, m_normalCount, m_faceCount;
 	TextureClass* m_Texture;
 
 	ModelType* m_model;
+
+	XMFLOAT3* m_instancePosition;
 };
 
 #endif

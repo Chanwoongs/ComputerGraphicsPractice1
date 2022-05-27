@@ -4,16 +4,25 @@
 #include "modelclass.h"
 
 
-ModelClass::ModelClass()
+ModelClass::ModelClass(XMFLOAT3* m_positions, int m_instanceCount)
 {
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
+	m_instanceBuffer = 0;
 	m_Texture = 0;
 	m_model = 0;
 
 	m_textureCount = 0;
 	m_normalCount = 0;
 	m_faceCount = 0;
+
+	this->m_instanceCount = m_instanceCount;
+	m_instancePosition = new XMFLOAT3[m_instanceCount];
+
+	for (int i = 0; i < m_instanceCount; i++)
+	{
+		m_instancePosition[i] = m_positions[i];
+	}
 }
 
 
@@ -80,9 +89,19 @@ void ModelClass::Render(ID3D11DeviceContext* deviceContext)
 }
 
 
+int ModelClass::GetVertexCount()
+{
+	return m_vertexCount;
+}
+
 int ModelClass::GetIndexCount()
 {
 	return m_indexCount;
+}
+
+int ModelClass::GetInstanceCount()
+{
+	return m_instanceCount;
 }
 
 
@@ -95,8 +114,9 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {
 	VertexType* vertices;
+	InstanceType* instances;
 	unsigned long* indices;
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
+	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc, instanceBufferDesc;
     D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 	int i;
@@ -145,6 +165,38 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 		return false;
 	}
 
+	instances = new InstanceType[m_instanceCount];
+	if (!instances)
+	{
+		return false;
+	}
+
+	// 데이터로 인스턴스 배열을 로드합니다.
+	for (int i = 0; i < m_instanceCount; i++)
+	{
+		instances[i].position = m_instancePosition[i];
+	}
+
+	// 인스턴스 버퍼의 설명을 설정합니다.
+	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	instanceBufferDesc.ByteWidth = sizeof(InstanceType) * m_instanceCount;
+	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	instanceBufferDesc.CPUAccessFlags = 0;
+	instanceBufferDesc.MiscFlags = 0;
+	instanceBufferDesc.StructureByteStride = 0;
+
+	// 하위 리소스 구조에 인스턴스 데이터에 대한 포인터를 제공합니다.
+	D3D11_SUBRESOURCE_DATA instanceData;
+	instanceData.pSysMem = instances;
+	instanceData.SysMemPitch = 0;
+	instanceData.SysMemSlicePitch = 0;
+
+	// 인스턴스 버퍼를 만듭니다.
+	if (FAILED(device->CreateBuffer(&instanceBufferDesc, &instanceData, &m_instanceBuffer)))
+	{
+		return false;
+	}
+
 	// Set up the description of the static index buffer.
     indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
     indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
@@ -172,12 +224,27 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	delete [] indices;
 	indices = 0;
 
+	delete [] instances;
+	instances = 0;
+
 	return true;
 }
 
 
 void ModelClass::ShutdownBuffers()
 {
+	if (m_instancePosition)
+	{
+		delete[] m_instancePosition;
+		m_instancePosition = 0;
+	}
+	// Release the index buffer.
+	if (m_instanceBuffer)
+	{
+		m_instanceBuffer->Release();
+		m_instanceBuffer = 0;
+	}
+
 	// Release the index buffer.
 	if(m_indexBuffer)
 	{
@@ -198,16 +265,15 @@ void ModelClass::ShutdownBuffers()
 
 void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 {
-	unsigned int stride;
-	unsigned int offset;
-
-
-	// Set vertex buffer stride and offset.
-	stride = sizeof(VertexType); 
-	offset = 0;
+	// 버퍼 오프셋과 스트라이드를 설정합니다.
+	unsigned int strides[2] = { sizeof(VertexType), sizeof(InstanceType) };
+	unsigned int offsets[2] = { 0, 0 };
     
+	// 포인터의 배열을 정점 버퍼와 인스턴스 버퍼로 설정합니다.
+	ID3D11Buffer* bufferPointers[2] = { m_vertexBuffer, m_instanceBuffer };
+
 	// Set the vertex buffer to active in the input assembler so it can be rendered.
-	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+	deviceContext->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 
     // Set the index buffer to active in the input assembler so it can be rendered.
 	deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
