@@ -10,7 +10,10 @@ TextureShaderClass::TextureShaderClass()
 	m_pixelShader = 0;
 	m_layout = 0;
 	m_matrixBuffer = 0;
+	m_textureBuffer = 0;
 	m_sampleState = 0;
+
+	m_numOfTexture = 0;
 }
 
 
@@ -79,6 +82,7 @@ bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC textureBufferDesc;
     D3D11_SAMPLER_DESC samplerDesc;
 
 
@@ -190,6 +194,20 @@ bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd,
 		return false;
 	}
 
+	textureBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	textureBufferDesc.ByteWidth = sizeof(TextureBufferType);
+	textureBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	textureBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	textureBufferDesc.MiscFlags = 0;
+	textureBufferDesc.StructureByteStride = 0;
+
+	result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_textureBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+
 	// Create a texture sampler state description.
 	// The sampler state description is setup here and then can be passed to the pixel shader after. 
 	// The most important element of the texture sampler description is Filter. Filter will determine 
@@ -239,6 +257,12 @@ void TextureShaderClass::ShutdownShader()
 	{
 		m_matrixBuffer->Release();
 		m_matrixBuffer = 0;
+	}
+
+	if (m_textureBuffer)
+	{
+		m_textureBuffer->Release();
+		m_textureBuffer = 0;
 	}
 
 	// Release the layout.
@@ -309,6 +333,7 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
+	TextureBufferType* dataPtr1;
 	unsigned int bufferNumber;
 
 
@@ -341,6 +366,28 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	// Now set the constant buffer in the vertex shader with the updated values.
     deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
+	// Lock the constant buffer so it can be written to.
+	result = deviceContext->Map(m_textureBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// Get a pointer to the data in the constant buffer.
+	dataPtr1 = (TextureBufferType*)mappedResource.pData;
+
+	dataPtr1->numOfTexture = m_numOfTexture;
+
+	// Unlock the constant buffer.
+	deviceContext->Unmap(m_textureBuffer, 0);
+
+	// Set the position of the constant buffer in the vertex shader.
+	bufferNumber = 1;
+
+	// Now set the constant buffer in the vertex shader with the updated values.
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_textureBuffer);
+
+
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 
@@ -364,4 +411,9 @@ void TextureShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int in
 	deviceContext->DrawIndexed(indexCount, 0, 0);
 
 	return;
+}
+
+void TextureShaderClass::SetNumOfTexture(int numOfTextureTiles)
+{
+	this->m_numOfTexture = numOfTextureTiles;
 }
