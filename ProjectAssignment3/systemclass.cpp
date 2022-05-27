@@ -42,7 +42,7 @@ bool SystemClass::Initialize()
 	}
 
 	// Initialize the input object.
-	m_Input->Initialize();
+	m_Input->Initialize(m_hinstance, m_hwnd, screenWidth, screenHeight);
 
 	// Create the graphics object.  This object will handle rendering all the graphics for this application.
 	m_Graphics = new GraphicsClass;
@@ -75,6 +75,7 @@ void SystemClass::Shutdown()
 	// Release the input object.
 	if(m_Input)
 	{
+		m_Input->Shutdown();
 		delete m_Input;
 		m_Input = 0;
 	}
@@ -89,14 +90,15 @@ void SystemClass::Shutdown()
 void SystemClass::Run()
 {
 	MSG msg;
-	bool done, result;
-
+	bool done, result, isKeyPressed;
+	char key;
 
 	// Initialize the message structure.
 	ZeroMemory(&msg, sizeof(MSG));
 	
 	// Loop until there is a quit message from the window or the user.
 	done = false;
+	isKeyPressed = false;
 	while(!done)
 	{
 		// Handle the windows messages.
@@ -117,8 +119,63 @@ void SystemClass::Run()
 			result = Frame();
 			if(!result)
 			{
+				MessageBox(m_hwnd, L"Frame Processing Failed", L"Error", MB_OK);
 				done = true;
 			}
+		}
+
+		float speed = 0.01;
+
+		// Check if the user pressed escape and wants to quit.
+		if (m_Input->IsEscapePressed() == true)
+		{
+			done = true;
+		}
+		if (m_Input->GetKeyboardState(key) == true)
+		{
+			if (key == 54 && !isKeyPressed)
+			{
+				m_Graphics->toggleAmbient();
+				isKeyPressed = true;
+			}
+			if (key == 55 && !isKeyPressed)
+			{
+				m_Graphics->toggleDiffuse();
+				isKeyPressed = true;
+			}
+			if (key == 56 && !isKeyPressed)
+			{
+				m_Graphics->toggleSpecular();
+				isKeyPressed = true;
+			}
+			if (key == 97)
+			{
+				m_Graphics->GetCamera()->MoveLeft(speed);
+			}
+			if (key == 100)
+			{
+				m_Graphics->GetCamera()->MoveRight(speed);
+			}
+			if (key == 115)
+			{
+				m_Graphics->GetCamera()->MoveBack(speed);
+			}
+			if (key == 119)
+			{
+				m_Graphics->GetCamera()->MoveForward(speed);
+			}
+			if (key == 113)
+			{
+				m_Graphics->GetCamera()->MoveDown(speed);
+			}
+			if (key == 101)
+			{
+				m_Graphics->GetCamera()->MoveUp(speed);
+			}
+		}
+		else
+		{
+			isKeyPressed = false;
 		}
 
 	}
@@ -126,16 +183,23 @@ void SystemClass::Run()
 	return;
 }
 
-
 bool SystemClass::Frame()
 {
 	bool result;
+	float mouseX, mouseY;
 
-
-	// Check if the user pressed escape and wants to exit the application.
-	if(m_Input->IsKeyDown(VK_ESCAPE))
+	// Do the input frame processing.
+	result = m_Input->Frame();
+	if (!result)
 	{
 		return false;
+	}
+	// Get the location of the mouse from the input object.
+	m_Input->GetMouseState(mouseX, mouseY);
+
+	if (mouseX != 0 || mouseY != 0)
+	{
+		m_Graphics->GetCamera()->RotateCamera(mouseY * 0.05, mouseX * 0.05, 0.0f);
 	}
 
 	// Do the frame processing for the graphics object.
@@ -151,30 +215,7 @@ bool SystemClass::Frame()
 
 LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
-	switch(umsg)
-	{
-		// Check if a key has been pressed on the keyboard.
-		case WM_KEYDOWN:
-		{
-			// If a key is pressed send it to the input object so it can record that state.
-			m_Input->KeyDown((unsigned int)wparam);
-			return 0;
-		}
-
-		// Check if a key has been released on the keyboard.
-		case WM_KEYUP:
-		{
-			// If a key is released then send it to the input object so it can unset the state for that key.
-			m_Input->KeyUp((unsigned int)wparam);
-			return 0;
-		}
-
-		// Any other messages send to the default message handler as our application won't make use of them.
-		default:
-		{
-			return DefWindowProc(hwnd, umsg, wparam, lparam);
-		}
-	}
+	return DefWindowProc(hwnd, umsg, wparam, lparam);
 }
 
 
