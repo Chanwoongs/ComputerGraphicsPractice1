@@ -49,25 +49,27 @@ void LightShaderClass::Shutdown()
 	return;
 }
 
-bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
+bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount, 
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
 	ID3D11ShaderResourceView* texture, 
 	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor,
-	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
+	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
+	float ambientToggle, float diffuseToggle, float specularToggle)
 {
 	bool result;
 
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, 
-		lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower);
+		lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower,
+		ambientToggle, diffuseToggle, specularToggle);
 	if(!result)
 	{
 		return false;
 	}
 
 	// Now render the prepared buffers with the shader.
-	RenderShader(deviceContext, indexCount);
+	RenderShader(deviceContext, vertexCount, instanceCount);
 
 	return true;
 }
@@ -79,7 +81,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	ID3D10Blob* errorMessage;
 	ID3D10Blob* vertexShaderBuffer;
 	ID3D10Blob* pixelShaderBuffer;
-	D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
+	D3D11_INPUT_ELEMENT_DESC polygonLayout[4];
 	unsigned int numElements;
     D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC matrixBufferDesc;
@@ -168,6 +170,14 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	polygonLayout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 	polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[2].InstanceDataStepRate = 0;
+
+	polygonLayout[3].SemanticName = "TEXCOORD";
+	polygonLayout[3].SemanticIndex = 1;
+	polygonLayout[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	polygonLayout[3].InputSlot = 1;
+	polygonLayout[3].AlignedByteOffset = 0;
+	polygonLayout[3].InputSlotClass = D3D11_INPUT_PER_INSTANCE_DATA;
+	polygonLayout[3].InstanceDataStepRate = 1;
 
 	// Get a count of the elements in the layout.
     numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
@@ -353,7 +363,8 @@ void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
 	ID3D11ShaderResourceView* texture, 
-	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
+	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
+	float ambientToggle, float diffuseToggle, float specularToggle)
 {
 	HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -410,6 +421,9 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr2->lightDirection = lightDirection;
 	dataPtr2->specularColor = specularColor;
 	dataPtr2->specularPower = specularPower;
+	dataPtr2->ambientToggle = ambientToggle;
+	dataPtr2->diffuseToggle = diffuseToggle;
+	dataPtr2->specularToggle = specularToggle;
 
 	// Unlock the constant buffer.
 	deviceContext->Unmap(m_lightBuffer, 0);
@@ -447,7 +461,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 }
 
 
-void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int vertexCount, int instanceCount)
 {
 	// Set the vertex input layout.
 	deviceContext->IASetInputLayout(m_layout);
@@ -460,7 +474,7 @@ void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int inde
 	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
 	// Render the triangle.
-	deviceContext->DrawIndexed(indexCount, 0, 0);
+	deviceContext->DrawInstanced(vertexCount, instanceCount, 0, 0);
 
 	return;
 }

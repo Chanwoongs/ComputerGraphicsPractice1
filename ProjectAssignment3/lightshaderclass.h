@@ -44,6 +44,10 @@ private:
 		XMFLOAT3 lightDirection;
 		float specularPower;
 		XMFLOAT4 specularColor;
+		float ambientToggle;
+		float diffuseToggle;
+		float specularToggle;
+		float padding;
 	};
 
 public:
@@ -53,8 +57,8 @@ public:
 
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
-	bool Render(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, 
-		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float);
+	bool Render(ID3D11DeviceContext*, int, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, 
+		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float, float, float, float);
 
 private:
 	bool InitializeShader(ID3D11Device*, HWND, const WCHAR*, const WCHAR*);
@@ -62,8 +66,8 @@ private:
 	void OutputShaderErrorMessage(ID3D10Blob*, HWND, const WCHAR*);
 
 	bool SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, 
-		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float);
-	void RenderShader(ID3D11DeviceContext*, int);
+		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float, float, float, float);
+	void RenderShader(ID3D11DeviceContext*, int, int);
 
 private:
 	ID3D11VertexShader* m_vertexShader;

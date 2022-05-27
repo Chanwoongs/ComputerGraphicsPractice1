@@ -6,6 +6,9 @@
 
 LightClass::LightClass()
 {
+	m_ambientToggle = 1.0f;
+	m_diffuseToggle = 1.0f;
+	m_specularToggle = 1.0f;
 }
 
 
@@ -48,6 +51,21 @@ void LightClass::SetSpecularPower(float power)
 	return;
 }
 
+void LightClass::SetToggleAmbient(float toggle)
+{
+	m_ambientToggle = toggle;
+}
+
+void LightClass::SetToggleDiffuse(float toggle)
+{
+	m_diffuseToggle = toggle;
+}
+
+void LightClass::SetToggleSpecular(float toggle)
+{
+	m_specularToggle = toggle;
+}
+
 XMFLOAT4 LightClass::GetAmbientColor()
 {
 	return m_ambientColor;
@@ -71,4 +89,19 @@ XMFLOAT4 LightClass::GetSpecularColor()
 float LightClass::GetSpecularPower()
 {
 	return m_specularPower;
+}
+
+float LightClass::GetAmbientToggle()
+{
+	return m_ambientToggle;
+}
+
+float LightClass::GetDiffuseToggle()
+{
+	return m_diffuseToggle;
+}
+
+float LightClass::GetSpecularToggle()
+{
+	return m_specularToggle;
 }
