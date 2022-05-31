@@ -26,6 +26,13 @@ const float SCREEN_NEAR = 0.1f;
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: GraphicsClass
 ////////////////////////////////////////////////////////////////////////////////
+struct Model {
+	ModelClass* model;
+	XMFLOAT3* positions;
+	XMFLOAT3 scale;
+	int instanceCount;
+};
+
 class GraphicsClass
 {
 public:
@@ -60,20 +67,11 @@ private:
 	bool m_diffuse;
 	bool m_specular;
 
-	vector<ModelClass*> m_models;
+	vector<Model> m_models;
 
-	ModelClass* m_Plane;
-	XMFLOAT3* m_planePosition;
-	int m_planeCount;
-
-	ModelClass* m_IronMan;
-	XMFLOAT3* m_ironManPosition;
-	int m_ironManCount;
-
-	ModelClass* temp;
-	XMFLOAT3* tempPos;
-	int tempCount;
-
+	Model m_Plane;
+	Model m_IronMan;
+	Model temp;
 	
 };
 
