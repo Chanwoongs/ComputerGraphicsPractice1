@@ -31,6 +31,7 @@ struct Model {
 	XMFLOAT3* positions;
 	XMFLOAT3 scale;
 	int instanceCount;
+	float rotY;
 };
 
 class GraphicsClass
@@ -54,6 +55,7 @@ private:
 	bool Render(float);
 	void SetModelsInfo();
 	bool InitializeModels(HWND);
+	XMFLOAT3 divideXMF3(XMFLOAT3, XMFLOAT3);
 
 private:
 	D3DClass* m_D3D;
@@ -69,10 +71,31 @@ private:
 
 	vector<Model> m_models;
 
+	// Environments
 	Model m_Plane;
+
+	// Single Hero
 	Model m_IronMan;
-	Model temp;
-	
+	Model m_Katarina;
+	Model m_Deadpool;
+	Model m_Spiderman;
+	Model m_Spongebob;
+	Model m_Patrick;
+	Model m_Robocop;
+	Model m_Hulk;
+
+	// Multiple Heroes
+	Model m_Tank;
+	Model m_GiantRobot;
+	Model m_HulkBuster;
+	Model m_RifleSoldier;
+
+	// Single Villain
+	Model m_Diablo;
+	Model m_Smoker;
+	Model m_AbominationHulk;
+	Model m_Venom;
+	Model m_Xuchilbara;
 };
 
 #endif
