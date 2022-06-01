@@ -54,7 +54,7 @@ private:
 	};
 
 public:
-	ModelClass(XMFLOAT3*, int);
+	ModelClass(XMFLOAT3*, int, float);
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
@@ -66,6 +66,8 @@ public:
 	int GetIndexCount();
 	int GetInstanceCount();
 	ID3D11ShaderResourceView* GetTexture();
+
+	void SetAngle(float angle);
 
 	bool LoadModel(const WCHAR*);
 	void ReleaseModel();
@@ -89,6 +91,8 @@ private:
 	ModelType* m_model;
 
 	XMFLOAT3* m_instancePosition;
+
+	float angle;
 };
 
 #endif

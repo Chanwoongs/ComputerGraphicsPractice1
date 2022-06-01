@@ -4,7 +4,7 @@
 #include "modelclass.h"
 
 
-ModelClass::ModelClass(XMFLOAT3* m_positions, int m_instanceCount)
+ModelClass::ModelClass(XMFLOAT3* m_positions, int m_instanceCount, float angle)
 {
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
@@ -23,6 +23,8 @@ ModelClass::ModelClass(XMFLOAT3* m_positions, int m_instanceCount)
 	{
 		m_instancePosition[i] = m_positions[i];
 	}
+
+	this->angle = angle;
 }
 
 
@@ -110,6 +112,11 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 	return m_Texture->GetTexture();
 }
 
+void ModelClass::SetAngle(float angle)
+{
+	this->angle = angle;
+}
+
 
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {
@@ -138,9 +145,9 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	// Load the vertex array and index array with data.
 	for (i = 0; i < m_vertexCount; i++)
 	{
-		vertices[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
+		XMStoreFloat3(&vertices[i].position, XMVector3Rotate(XMVectorSet(m_model[i].x, m_model[i].y, m_model[i].z, 0), XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), angle)));
 		vertices[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
-		vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
+		XMStoreFloat3(&vertices[i].normal, XMVector3Rotate(XMVectorSet(m_model[i].nx, m_model[i].ny, m_model[i].nz, 0), XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), angle)));
 
 		indices[i] = i;
 	}
