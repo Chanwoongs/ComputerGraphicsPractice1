@@ -2,6 +2,10 @@
 // Filename: light.vs
 ////////////////////////////////////////////////////////////////////////////////
 
+/////////////
+// DEFINES //
+/////////////
+#define NUM_LIGHTS 1
 
 /////////////
 // GLOBALS //
@@ -17,6 +21,11 @@ cbuffer CameraBuffer
 {
     float3 cameraPosition;
 	float padding; // GPU에 넘겨줄때 16byte 단위를 주기위해
+};
+
+cbuffer LightPositionBuffer
+{
+	float4 lightPosition[NUM_LIGHTS];
 };
 
 //////////////
@@ -36,6 +45,7 @@ struct PixelInputType
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
 	float3 viewDirection : TEXCOORD1;
+    float3 lightPos1 : TEXCOORD2;
 };
 
 
@@ -83,6 +93,12 @@ PixelInputType LightVertexShader(VertexInputType input)
 	
     // Normalize the viewing direction vector.
     output.viewDirection = normalize(output.viewDirection);
+
+    // Determine the light positions based on the position of the lights and the position of the vertex in the world.
+    output.lightPos1.xyz = lightPosition[0].xyz - worldPosition.xyz; // d 구하기
+
+    // Normalize the light position vectors.
+    output.lightPos1 = normalize(output.lightPos1);
 
     return output;
 }

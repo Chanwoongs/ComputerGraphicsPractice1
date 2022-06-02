@@ -54,6 +54,9 @@
     <ClCompile Include="textureshaderclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="fogshaderclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="textureclass.h">
@@ -93,6 +96,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="modelclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="fogshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -151,6 +157,12 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="data\texture.vs">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\fog.ps">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\fog.vs">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>
