@@ -71,7 +71,7 @@ private:
 
 	vector<Model> m_models;
 
-	// Environments
+	// Plane
 	Model m_Plane;
 
 	// Single Hero
@@ -96,6 +96,27 @@ private:
 	Model m_AbominationHulk;
 	Model m_Venom;
 	Model m_Xuchilbara;
+
+	// Multiple Villains
+	Model m_HeavyRobot;
+	Model m_Librarian;
+	Model m_GiantAlien;
+	Model m_AlienWarrior;
+
+	// Environments
+	Model m_OldHouseN;
+	Model m_OldHouseS;
+	Model m_OldHouseE;
+	Model m_OldHouseW;
+	Model m_TrafficSignN;
+	Model m_TrafficSignE;
+	Model m_DamagedDockN;
+	Model m_DamagedDockE;
+	Model m_DestroyedTank;
+	Model m_DestroyedHouse;
+	Model m_Spaceship;
+	Model m_Hospital;
+	Model m_Building;
 };
 
 #endif
