@@ -25,6 +25,7 @@ public:
 	void SetAmbientColor(float, float, float, float);
 	void SetDiffuseColor(float, float, float, float);
 	void SetDirection(float, float, float);
+	void SetPosition(float, float, float);
 	void SetSpecularColor(float, float, float, float);
 	void SetSpecularPower(float);
 	void SetToggleAmbient(float);
@@ -34,6 +35,7 @@ public:
 	XMFLOAT4 GetAmbientColor();
 	XMFLOAT4 GetDiffuseColor();
 	XMFLOAT3 GetDirection();
+	XMFLOAT4 GetPosition();
 	XMFLOAT4 GetSpecularColor();
 	float GetSpecularPower();
 	float GetAmbientToggle();
@@ -44,6 +46,7 @@ private:
 	XMFLOAT4 m_ambientColor;
 	XMFLOAT4 m_diffuseColor;
 	XMFLOAT3 m_direction;
+	XMFLOAT4 m_position;
 	XMFLOAT4 m_specularColor;
 	float m_specularPower;
 	float m_ambientToggle;

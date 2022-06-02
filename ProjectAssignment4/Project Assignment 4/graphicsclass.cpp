@@ -11,6 +11,8 @@ GraphicsClass::GraphicsClass()
 	m_TextureShader = 0;
 	m_LightShader = 0;
 	m_Light = 0;
+	m_FogShader = 0;
+	m_Light1 = 0;
 
 	m_ambient = true;
 	m_diffuse = true;
@@ -101,9 +103,35 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Initialize the light object.
 	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(1.0f, -0.5f, 1.0f);
+	m_Light->SetDirection(1.0f, -1.0f, 0.0f);
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetSpecularPower(32.0f);
+
+	// Create the fog shader object.
+	m_FogShader = new FogShaderClass;
+	if (!m_FogShader)
+	{
+		return false;
+	}
+
+	// Initialize the fog shader object.
+	result = m_FogShader->Initialize(m_D3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the fog shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the first light object.
+	m_Light1 = new LightClass;
+	if (!m_Light1)
+	{
+		return false;
+	}
+
+	// Initialize the first light object.
+	m_Light1->SetDiffuseColor(1.0f, 0.0f, 0.0f, 1.0f);
+	m_Light1->SetPosition(0.0f, 100.0f, -800.0f);
 
 	return true;
 }
@@ -186,6 +214,11 @@ void GraphicsClass::Shutdown()
 		delete m_Light;
 		m_Light = 0;
 	}
+	if (m_Light1)
+	{
+		delete m_Light1;
+		m_Light1 = 0;
+	}
 
 	// Release the light shader object.
 	if (m_LightShader)
@@ -202,6 +235,14 @@ void GraphicsClass::Shutdown()
 		m_TextureShader = 0;
 	}
 	
+	// Release the fog shader object.
+	if (m_FogShader)
+	{
+		m_FogShader->Shutdown();
+		delete m_FogShader;
+		m_FogShader = 0;
+	}
+
 	return;
 }
 
@@ -233,9 +274,25 @@ bool GraphicsClass::Render(float rotation)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
-	
+	XMFLOAT4 diffuseColor[1];
+	XMFLOAT4 lightPosition[1];
+	float fogColor, fogStart, fogEnd;
+
+	// Set the color of the fog to grey.
+	fogColor = 0.9f;
+
+	// Set the start and end of the fog.
+	fogStart = 1000.0f;
+	fogEnd = -1000.0f;
+
+	// Create the diffuse color array from the four light colors.
+	diffuseColor[0] = m_Light1->GetDiffuseColor();
+
+	// Create the light position array from the four light positions.
+	lightPosition[0] = m_Light1->GetPosition();
+
 	// Clear the buffers to begin the scene.
-	m_D3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
+	m_D3D->BeginScene(fogColor, fogColor, fogColor, 1.0f);
 
 	// Generate the view matrix based on the camera's position.
 	m_Camera->Render();
@@ -253,6 +310,17 @@ bool GraphicsClass::Render(float rotation)
 
 		// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
 		object.model->Render(m_D3D->GetDeviceContext());
+		// Render the model with the fog shader.
+		result = m_FogShader->Render(m_D3D->GetDeviceContext(), object.model->GetIndexCount(), 
+			tempWorldMatrix * XMMatrixScaling(object.scale.x, object.scale.y, object.scale.z), 
+			viewMatrix, projectionMatrix,
+			object.model->GetTexture(), fogStart, fogEnd);
+		if (!result)
+		{
+			return false;
+		}
+		// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+		object.model->Render(m_D3D->GetDeviceContext());
 		// Render the model using the light shader.
 		result = m_LightShader->Render(m_D3D->GetDeviceContext(), object.model->GetVertexCount(), object.model->GetInstanceCount(),
 			tempWorldMatrix * XMMatrixScaling(object.scale.x, object.scale.y, object.scale.z)
@@ -260,11 +328,22 @@ bool GraphicsClass::Render(float rotation)
 			object.model->GetTexture(),
 			m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
 			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower(),
-			m_Light->GetAmbientToggle(), m_Light->GetDiffuseToggle(), m_Light->GetSpecularToggle());
+			m_Light->GetAmbientToggle(), m_Light->GetDiffuseToggle(), m_Light->GetSpecularToggle(),
+			diffuseColor, lightPosition);
 		if (!result)
 		{
 			return false;
 		}
+	}
+
+	m_cube.model->Render(m_D3D->GetDeviceContext());
+
+	// Render the model with the fog shader.
+	result = m_FogShader->Render(m_D3D->GetDeviceContext(), m_cube.model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_cube.model->GetTexture(), fogStart, fogEnd);
+	if (!result)
+	{
+		return false;
 	}
 
 	// Present the rendered scene to the screen.
@@ -537,21 +616,22 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-
-	// Environment
-	// OldHouse
-	m_models.push_back(m_OldHouseN);
+	// AlienWarrior
+	m_models.push_back(m_AlienWarrior);
 	if (!m_models.at(21).model)
 	{
 		return false;
 	}
-	result = m_models.at(21).model->Initialize(m_D3D->GetDevice(), L"./data/OldHouse.obj", L"./data/OldHouse.dds");
+	result = m_models.at(21).model->Initialize(m_D3D->GetDevice(), L"./data/AlienWarrior.obj", L"./data/AlienWarrior.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-	m_models.push_back(m_OldHouseS);
+
+	// Environment
+	// OldHouse
+	m_models.push_back(m_OldHouseN);
 	if (!m_models.at(22).model)
 	{
 		return false;
@@ -562,7 +642,7 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-	m_models.push_back(m_OldHouseE);
+	m_models.push_back(m_OldHouseS);
 	if (!m_models.at(23).model)
 	{
 		return false;
@@ -573,7 +653,7 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-	m_models.push_back(m_OldHouseW);
+	m_models.push_back(m_OldHouseE);
 	if (!m_models.at(24).model)
 	{
 		return false;
@@ -584,20 +664,20 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-
-	// TrafficSign
-	m_models.push_back(m_TrafficSignN);
+	m_models.push_back(m_OldHouseW);
 	if (!m_models.at(25).model)
 	{
 		return false;
 	}
-	result = m_models.at(25).model->Initialize(m_D3D->GetDevice(), L"./data/TrafficSign.obj", L"./data/TrafficSign.dds");
+	result = m_models.at(25).model->Initialize(m_D3D->GetDevice(), L"./data/OldHouse.obj", L"./data/OldHouse.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-	m_models.push_back(m_TrafficSignE);
+
+	// TrafficSign
+	m_models.push_back(m_TrafficSignN);
 	if (!m_models.at(26).model)
 	{
 		return false;
@@ -608,20 +688,20 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-
-	// DamagedDock
-	m_models.push_back(m_DamagedDockN);
+	m_models.push_back(m_TrafficSignE);
 	if (!m_models.at(27).model)
 	{
 		return false;
 	}
-	result = m_models.at(27).model->Initialize(m_D3D->GetDevice(), L"./data/DamagedDock.obj", L"./data/DamagedDock.dds");
+	result = m_models.at(27).model->Initialize(m_D3D->GetDevice(), L"./data/TrafficSign.obj", L"./data/TrafficSign.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-	m_models.push_back(m_DamagedDockE);
+
+	// DamagedDock
+	m_models.push_back(m_DamagedDockN);
 	if (!m_models.at(28).model)
 	{
 		return false;
@@ -632,14 +712,25 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-
-	// DestroyedTank
-	m_models.push_back(m_DestroyedTank);
+	m_models.push_back(m_DamagedDockE);
 	if (!m_models.at(29).model)
 	{
 		return false;
 	}
-	result = m_models.at(29).model->Initialize(m_D3D->GetDevice(), L"./data/DestroyedTank.obj", L"./data/DestroyedTank.dds");
+	result = m_models.at(29).model->Initialize(m_D3D->GetDevice(), L"./data/DamagedDock.obj", L"./data/DamagedDock.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// DestroyedTank
+	m_models.push_back(m_DestroyedTank);
+	if (!m_models.at(30).model)
+	{
+		return false;
+	}
+	result = m_models.at(30).model->Initialize(m_D3D->GetDevice(), L"./data/DestroyedTank.obj", L"./data/DestroyedTank.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -648,11 +739,11 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 
 	// DestroyedHouse
 	m_models.push_back(m_DestroyedHouse);
-	if (!m_models.at(30).model)
+	if (!m_models.at(31).model)
 	{
 		return false;
 	}
-	result = m_models.at(30).model->Initialize(m_D3D->GetDevice(), L"./data/DestroyedHouse.obj", L"./data/DestroyedHouse.dds");
+	result = m_models.at(31).model->Initialize(m_D3D->GetDevice(), L"./data/DestroyedHouse.obj", L"./data/DestroyedHouse.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -661,11 +752,11 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 
 	// SpaceShip
 	m_models.push_back(m_Spaceship);
-	if (!m_models.at(31).model)
+	if (!m_models.at(32).model)
 	{
 		return false;
 	}
-	result = m_models.at(31).model->Initialize(m_D3D->GetDevice(), L"./data/SpaceShip.obj", L"./data/SpaceShip.dds");
+	result = m_models.at(32).model->Initialize(m_D3D->GetDevice(), L"./data/SpaceShip.obj", L"./data/SpaceShip.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -674,11 +765,11 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 
 	// Hospital
 	m_models.push_back(m_Hospital);
-	if (!m_models.at(32).model)
+	if (!m_models.at(33).model)
 	{
 		return false;
 	}
-	result = m_models.at(32).model->Initialize(m_D3D->GetDevice(), L"./data/Hospital.obj", L"./data/Hospital.dds");
+	result = m_models.at(33).model->Initialize(m_D3D->GetDevice(), L"./data/Hospital.obj", L"./data/Hospital.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -687,11 +778,24 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 
 	// Building
 	m_models.push_back(m_Building);
-	if (!m_models.at(33).model)
+	if (!m_models.at(34).model)
 	{
 		return false;
 	}
-	result = m_models.at(33).model->Initialize(m_D3D->GetDevice(), L"./data/Building.obj", L"./data/Building.dds");
+	result = m_models.at(34).model->Initialize(m_D3D->GetDevice(), L"./data/Building.obj", L"./data/Building.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// cube
+	m_models.push_back(m_cube);
+	if (!m_models.at(35).model)
+	{
+		return false;
+	}
+	result = m_models.at(35).model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -886,6 +990,25 @@ void GraphicsClass::SetModelsInfo()
 	}
 	m_GiantAlien.model = new ModelClass(m_GiantAlien.positions, m_GiantAlien.instanceCount, XM_PI);
 
+	m_AlienWarrior.instanceCount = 28;
+	m_AlienWarrior.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
+	m_AlienWarrior.positions = new XMFLOAT3[m_AlienWarrior.instanceCount];
+	for (int i = 0; i < 7; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			m_AlienWarrior.positions[2 * i + j] = divideXMF3(XMFLOAT3(-67.0f + (7.0f * i), 60.0f, -90.0f - (8.0f * j)), m_AlienWarrior.scale);
+		}
+	}
+	for (int i = 0; i < 7; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			m_AlienWarrior.positions[2 * i + j + 14] = divideXMF3(XMFLOAT3(25.0f + (7.0f * i), 60.0f, -90.0f - (8.0f * j)), m_AlienWarrior.scale);
+		}
+	}
+	m_AlienWarrior.model = new ModelClass(m_AlienWarrior.positions, m_AlienWarrior.instanceCount, -XM_PI / 2);
+
 	// Environment
 	m_Plane.instanceCount = 4000;
 	m_Plane.scale = XMFLOAT3(10.0f, 0.1f, 10.0f);
@@ -1011,4 +1134,9 @@ void GraphicsClass::SetModelsInfo()
 	m_Building.positions[0] = divideXMF3(XMFLOAT3(0.0f, 0.0f, 350.0f), m_Building.scale);
 	m_Building.model = new ModelClass(m_Building.positions, m_Building.instanceCount, 0.0f);
 
+	m_cube.instanceCount = 1;
+	m_cube.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_cube.positions = new XMFLOAT3[m_cube.instanceCount];
+	m_cube.positions[0] = divideXMF3(XMFLOAT3(0.0f, 0.0f, 0.0f), m_cube.scale);
+	m_cube.model = new ModelClass(m_cube.positions, m_cube.instanceCount, 0.0f);
 }

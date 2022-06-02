@@ -14,6 +14,7 @@
 #include "lightshaderclass.h"
 #include "lightclass.h"
 #include "textureshaderclass.h"
+#include "fogshaderclass.h"
 
 /////////////
 // GLOBALS //
@@ -64,6 +65,9 @@ private:
 	TextureShaderClass* m_TextureShader;
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
+	FogShaderClass* m_FogShader;
+
+	LightClass* m_Light1;
 	
 	bool m_ambient;
 	bool m_diffuse;
@@ -117,6 +121,8 @@ private:
 	Model m_Spaceship;
 	Model m_Hospital;
 	Model m_Building;
+
+	Model m_cube;
 };
 
 #endif
