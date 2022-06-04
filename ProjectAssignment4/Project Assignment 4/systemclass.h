@@ -10,6 +10,10 @@
 ///////////////////////////////
 #define WIN32_LEAN_AND_MEAN
 
+/////////////
+// GLOBALS //
+/////////////
+const float CAMERA_SPEED = 1.0f;
 
 //////////////
 // INCLUDES //

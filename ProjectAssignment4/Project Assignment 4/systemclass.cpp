@@ -124,8 +124,6 @@ void SystemClass::Run()
 			}
 		}
 
-		float speed = 1.0f;
-
 		// Check if the user pressed escape and wants to quit.
 		if (m_Input->IsEscapePressed() == true)
 		{
@@ -133,44 +131,53 @@ void SystemClass::Run()
 		}
 		if (m_Input->GetKeyboardState(key) == true)
 		{
+			// 6
 			if (key == 54 && !isKeyPressed)
 			{
 				m_Graphics->toggleAmbient();
 				isKeyPressed = true;
 			}
+			// 7
 			if (key == 55 && !isKeyPressed)
 			{
 				m_Graphics->toggleDiffuse();
 				isKeyPressed = true;
 			}
+			// 8
 			if (key == 56 && !isKeyPressed)
 			{
 				m_Graphics->toggleSpecular();
 				isKeyPressed = true;
 			}
+			// F
+			if (key == 102 && !isKeyPressed)
+			{
+				m_Graphics->toggleFog();
+				isKeyPressed = true;
+			}
 			if (key == 97)
 			{
-				m_Graphics->GetCamera()->MoveLeft(speed);
+				m_Graphics->GetCamera()->MoveLeft(CAMERA_SPEED);
 			}
 			if (key == 100)
 			{
-				m_Graphics->GetCamera()->MoveRight(speed);
+				m_Graphics->GetCamera()->MoveRight(CAMERA_SPEED);
 			}
 			if (key == 115)
 			{
-				m_Graphics->GetCamera()->MoveBack(speed);
+				m_Graphics->GetCamera()->MoveBack(CAMERA_SPEED);
 			}
 			if (key == 119)
 			{
-				m_Graphics->GetCamera()->MoveForward(speed);
+				m_Graphics->GetCamera()->MoveForward(CAMERA_SPEED);
 			}
 			if (key == 113)
 			{
-				m_Graphics->GetCamera()->MoveDown(speed);
+				m_Graphics->GetCamera()->MoveDown(CAMERA_SPEED);
 			}
 			if (key == 101)
 			{
-				m_Graphics->GetCamera()->MoveUp(speed);
+				m_Graphics->GetCamera()->MoveUp(CAMERA_SPEED);
 			}
 		}
 		else
@@ -276,8 +283,8 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	else
 	{
 		// If windowed then set it to 800x600 resolution.
-		screenWidth  = 800;
-		screenHeight = 600;
+		screenWidth  = 1600;
+		screenHeight = 900;
 
 		// Place the window in the middle of the screen.
 		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth)  / 2;
