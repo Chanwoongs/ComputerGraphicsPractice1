@@ -31,6 +31,7 @@ public:
 	void SetToggleAmbient(float);
 	void SetToggleDiffuse(float);
 	void SetToggleSpecular(float);
+	void SetToggleFog(float);
 
 	XMFLOAT4 GetAmbientColor();
 	XMFLOAT4 GetDiffuseColor();
@@ -41,6 +42,7 @@ public:
 	float GetAmbientToggle();
 	float GetDiffuseToggle();
 	float GetSpecularToggle();
+	float GetFogToggle();
 
 private:
 	XMFLOAT4 m_ambientColor;
@@ -52,6 +54,7 @@ private:
 	float m_ambientToggle;
 	float m_diffuseToggle;
 	float m_specularToggle;
+	float m_fogToggle;
 };
 
 #endif

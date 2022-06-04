@@ -261,6 +261,11 @@ bool InputClass::GetKeyboardState(char& key)
 		key = 'd';
 		return true;
 	}
+	if (m_keyboardState[DIK_F] & 0x80)
+	{
+		key = 'f';
+		return true;
+	}
 	if (m_keyboardState[DIK_W] & 0x80)
 	{
 		key = 'w';
