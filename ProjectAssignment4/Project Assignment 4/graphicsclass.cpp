@@ -13,12 +13,24 @@ GraphicsClass::GraphicsClass()
 	m_Light = 0;
 	m_FogShader = 0;
 	m_Light1 = 0;
+	m_Light2 = 0;
+	m_Light3 = 0;
 
 	m_ambient = true;
 	m_diffuse = true;
 	m_specular = true;
-}
 
+	XMMATRIX unitMatrix(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f);
+
+	this->unitMatrix = unitMatrix;
+	heroVillainDirection = 1;
+	meteorDirection = 1;
+	meteorState = 1;
+}
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
 {
@@ -102,7 +114,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Initialize the light object.
 	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
-	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetDiffuseColor(0.0f, 0.0f, 0.0f, 0.0f);
 	m_Light->SetDirection(1.0f, -1.0f, 0.0f);
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_Light->SetSpecularPower(32.0f);
@@ -130,8 +142,30 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the first light object.
-	m_Light1->SetDiffuseColor(1.0f, 0.0f, 0.0f, 1.0f);
-	m_Light1->SetPosition(0.0f, 100.0f, -800.0f);
+	m_Light1->SetDiffuseColor(0.3f, 0.0f, 1.0f, 1.0f);
+	m_Light1->SetPosition(0.0f, 100.0f, 100.0f);
+
+	// Create the second light object.
+	m_Light2 = new LightClass;
+	if (!m_Light2)
+	{
+		return false;
+	}
+
+	// Initialize the second light object.
+	m_Light2->SetDiffuseColor(0.7f, 0.0f, 0.0f, 1.0f);
+	m_Light2->SetPosition(0.0f, 200.0f, -350.0f);
+
+	// Create the third light object.
+	m_Light3 = new LightClass;
+	if (!m_Light3)
+	{
+		return false;
+	}
+
+	// Initialize the third light object.
+	m_Light3->SetDiffuseColor(0.9f, 0.9f, 0.9f, 1.0f);
+	m_Light3->SetPosition(0.0f, 100.0f, 0.0f);
 
 	return true;
 }
@@ -169,6 +203,18 @@ void GraphicsClass::toggleSpecular()
 	else
 	{
 		m_Light->SetToggleSpecular(0.0f);
+	}
+}
+
+void GraphicsClass::toggleFog()
+{
+	if (m_Light->GetFogToggle() == 0.0f)
+	{
+		m_Light->SetToggleFog(1.0f);
+	}
+	else
+	{
+		m_Light->SetToggleFog(0.0f);
 	}
 }
 
@@ -219,6 +265,16 @@ void GraphicsClass::Shutdown()
 		delete m_Light1;
 		m_Light1 = 0;
 	}
+	if (m_Light2)
+	{
+		delete m_Light2;
+		m_Light2 = 0;
+	}
+	if (m_Light3)
+	{
+		delete m_Light3;
+		m_Light3 = 0;
+	}
 
 	// Release the light shader object.
 	if (m_LightShader)
@@ -251,7 +307,7 @@ bool GraphicsClass::Frame()
 	bool result;
 
 	static float rotation = 0.0f;
-
+	static float timer = 0.0f;
 
 	// Update the rotation variable each frame.
 	rotation += XM_PI * 0.005f;
@@ -259,9 +315,10 @@ bool GraphicsClass::Frame()
 	{
 		rotation -= 360.0f;
 	}
+	timer += 1.0f;
 
 	// Render the graphics scene.
-	result = Render(rotation);
+	result = Render(rotation, timer);
 	if(!result)
 	{
 		return false;
@@ -270,16 +327,16 @@ bool GraphicsClass::Frame()
 	return true;
 }
 
-bool GraphicsClass::Render(float rotation)
+bool GraphicsClass::Render(float rotation, float& timer)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
-	XMFLOAT4 diffuseColor[1];
-	XMFLOAT4 lightPosition[1];
+	XMFLOAT4 diffuseColor[3];
+	XMFLOAT4 lightPosition[3];
 	float fogColor, fogStart, fogEnd;
 
 	// Set the color of the fog to grey.
-	fogColor = 0.9f;
+	fogColor = 0.5f;
 
 	// Set the start and end of the fog.
 	fogStart = 1000.0f;
@@ -287,9 +344,14 @@ bool GraphicsClass::Render(float rotation)
 
 	// Create the diffuse color array from the four light colors.
 	diffuseColor[0] = m_Light1->GetDiffuseColor();
+	diffuseColor[1] = m_Light2->GetDiffuseColor();
+	diffuseColor[2] = m_Light3->GetDiffuseColor();
+
 
 	// Create the light position array from the four light positions.
 	lightPosition[0] = m_Light1->GetPosition();
+	lightPosition[1] = m_Light2->GetPosition();
+	lightPosition[2] = m_Light3->GetPosition();
 
 	// Clear the buffers to begin the scene.
 	m_D3D->BeginScene(fogColor, fogColor, fogColor, 1.0f);
@@ -303,53 +365,86 @@ bool GraphicsClass::Render(float rotation)
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
 	auto tempWorldMatrix = worldMatrix;
+	m_models.at(35).model->RotateVertices(m_D3D->GetDevice(), rotation);
 
+	UpdateModelsTransformMatrix(timer);
+	
 	for (auto object : m_models)
 	{
-		tempWorldMatrix = worldMatrix;
-
-		// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
-		object.model->Render(m_D3D->GetDeviceContext());
-		// Render the model with the fog shader.
-		result = m_FogShader->Render(m_D3D->GetDeviceContext(), object.model->GetIndexCount(), 
-			tempWorldMatrix * XMMatrixScaling(object.scale.x, object.scale.y, object.scale.z), 
-			viewMatrix, projectionMatrix,
-			object.model->GetTexture(), fogStart, fogEnd);
-		if (!result)
-		{
-			return false;
-		}
 		// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
 		object.model->Render(m_D3D->GetDeviceContext());
 		// Render the model using the light shader.
 		result = m_LightShader->Render(m_D3D->GetDeviceContext(), object.model->GetVertexCount(), object.model->GetInstanceCount(),
-			tempWorldMatrix * XMMatrixScaling(object.scale.x, object.scale.y, object.scale.z)
-			, viewMatrix, projectionMatrix,
+			tempWorldMatrix * XMMatrixScaling(object.scale.x, object.scale.y, object.scale.z) * object.transformMatrix,
+			viewMatrix, projectionMatrix,
 			object.model->GetTexture(),
 			m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
 			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower(),
-			m_Light->GetAmbientToggle(), m_Light->GetDiffuseToggle(), m_Light->GetSpecularToggle(),
-			diffuseColor, lightPosition);
+			m_Light->GetAmbientToggle(), m_Light->GetDiffuseToggle(), m_Light->GetSpecularToggle(), m_Light->GetFogToggle(),
+			diffuseColor, lightPosition, fogStart, fogEnd);
 		if (!result)
 		{
 			return false;
 		}
-	}
-
-	m_cube.model->Render(m_D3D->GetDeviceContext());
-
-	// Render the model with the fog shader.
-	result = m_FogShader->Render(m_D3D->GetDeviceContext(), m_cube.model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_cube.model->GetTexture(), fogStart, fogEnd);
-	if (!result)
-	{
-		return false;
 	}
 
 	// Present the rendered scene to the screen.
 	m_D3D->EndScene();
 
 	return true;
+}
+
+void GraphicsClass::UpdateModelsTransformMatrix(float &timer)
+{
+	if ((int)timer % 175 == 0)
+	{
+		if (meteorState == 1)
+			meteorState = 2;
+		else if (meteorState == 3)
+			meteorState = 4;
+	}
+	if ((int)timer % 350 == 0)
+	{
+		heroVillainDirection *= -1;
+		meteorDirection *= -1;
+		
+		if (meteorState == 2)
+			meteorState = 3;
+		else if (meteorState == 4)
+			meteorState = 1;
+		
+		timer = 0;
+	}
+	// Heroes Marching
+	for (vector<Model>::iterator it = m_models.begin() + 1; it != m_models.begin() + 13; it++)
+	{
+		(*it).transformMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.1f * -heroVillainDirection);
+	}
+	// Villains Marching
+	for (vector<Model>::iterator it = m_models.begin() + 13; it != m_models.begin() + 22; it++)
+	{
+		(*it).transformMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.1f * heroVillainDirection);
+	}
+
+	// Meteor
+	if (meteorState == 1)
+	{
+		m_models.at(35).transformMatrix *= XMMatrixTranslation(0.0f, 1.2f * meteorDirection, 0.0f);
+	}
+	else if (meteorState == 2)
+	{
+		m_models.at(35).transformMatrix *= XMMatrixTranslation(0.0f, -2.0f * meteorDirection, 2.5f * meteorDirection);
+	}
+	else if (meteorState == 3)
+	{
+		m_models.at(35).transformMatrix *= XMMatrixTranslation(0.0f, -2.0f * meteorDirection, 2.5f * meteorDirection);
+	}
+	else if (meteorState == 4)
+	{
+		m_models.at(35).transformMatrix *= XMMatrixTranslation(0.0f, 1.2f * meteorDirection, 0.0f);
+	}
+	
+
 }
 
 bool GraphicsClass::InitializeModels(HWND hwnd)
@@ -788,20 +883,20 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-
-	// cube
-	m_models.push_back(m_cube);
+	
+	// Rock
+	m_models.push_back(m_Rock);
 	if (!m_models.at(35).model)
 	{
 		return false;
 	}
-	result = m_models.at(35).model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
+	result = m_models.at(35).model->Initialize(m_D3D->GetDevice(), L"./data/Rock.obj", L"./data/Rock.dds");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-
+	
 	return true;
 }
 
@@ -823,48 +918,56 @@ void GraphicsClass::SetModelsInfo()
 	m_IronMan.positions = new XMFLOAT3[m_IronMan.instanceCount];
 	m_IronMan.positions[0] = divideXMF3(XMFLOAT3(0.0f, 0.0f, 31.0f), m_IronMan.scale);
 	m_IronMan.model = new ModelClass(m_IronMan.positions, m_IronMan.instanceCount, 0.0f);
+	m_IronMan.transformMatrix = unitMatrix;
 
 	m_Katarina.instanceCount = 1;
 	m_Katarina.scale = XMFLOAT3(0.3f, 0.3f, 0.3f);
 	m_Katarina.positions = new XMFLOAT3[m_Katarina.instanceCount];
 	m_Katarina.positions[0] = divideXMF3(XMFLOAT3(2.0f, 0.0f, 32.0f), m_Katarina.scale);
 	m_Katarina.model = new ModelClass(m_Katarina.positions, m_Katarina.instanceCount, 0.0f);
+	m_Katarina.transformMatrix = unitMatrix;
 
 	m_Deadpool.instanceCount = 1;
 	m_Deadpool.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	m_Deadpool.positions = new XMFLOAT3[m_Deadpool.instanceCount];
 	m_Deadpool.positions[0] = divideXMF3(XMFLOAT3(-4.0f, 0.0f, 32.0f), m_Deadpool.scale);
 	m_Deadpool.model = new ModelClass(m_Deadpool.positions, m_Deadpool.instanceCount, XM_PI / 2);
+	m_Deadpool.transformMatrix = unitMatrix;
 
 	m_Spiderman.instanceCount = 1;
 	m_Spiderman.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_Spiderman.positions = new XMFLOAT3[m_Spiderman.instanceCount];
 	m_Spiderman.positions[0] = divideXMF3(XMFLOAT3(-2.0f, 0.0f, 32.0f), m_Spiderman.scale);
 	m_Spiderman.model = new ModelClass(m_Spiderman.positions, m_Spiderman.instanceCount, XM_PI);
+	m_Spiderman.transformMatrix = unitMatrix;
 
 	m_Spongebob.instanceCount = 1;
 	m_Spongebob.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_Spongebob.positions = new XMFLOAT3[m_Spongebob.instanceCount];
 	m_Spongebob.positions[0] = divideXMF3(XMFLOAT3(-6.0f, 0.0f, 33.0f), m_Spongebob.scale);
 	m_Spongebob.model = new ModelClass(m_Spongebob.positions, m_Spongebob.instanceCount, 0.0f);
+	m_Spongebob.transformMatrix = unitMatrix;
 
 	m_Patrick.instanceCount = 1;
 	m_Patrick.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_Patrick.positions = new XMFLOAT3[m_Patrick.instanceCount];
 	m_Patrick.positions[0] = divideXMF3(XMFLOAT3(6.0f, 0.0f, 33.0f), m_Patrick.scale);
 	m_Patrick.model = new ModelClass(m_Patrick.positions, m_Patrick.instanceCount, 0.0f);
+	m_Patrick.transformMatrix = unitMatrix;
 
 	m_Robocop.instanceCount = 1;
 	m_Robocop.scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
 	m_Robocop.positions = new XMFLOAT3[m_Robocop.instanceCount];
 	m_Robocop.positions[0] = divideXMF3(XMFLOAT3(4.0f, 0.0f, 32.0f), m_Robocop.scale);
 	m_Robocop.model = new ModelClass(m_Robocop.positions, m_Robocop.instanceCount, 0.0f);
+	m_Robocop.transformMatrix = unitMatrix;
 
 	m_Hulk.instanceCount = 1;
 	m_Hulk.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_Hulk.positions = new XMFLOAT3[m_Hulk.instanceCount];
 	m_Hulk.positions[0] = divideXMF3(XMFLOAT3(0.0f, 0.0f, 35.0f), m_Hulk.scale);
 	m_Hulk.model = new ModelClass(m_Hulk.positions, m_Hulk.instanceCount, 0.0f);
+	m_Hulk.transformMatrix = unitMatrix;
 
 	// Multiple Heroes
 	m_Tank.instanceCount = 108;
@@ -878,6 +981,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_Tank.model = new ModelClass(m_Tank.positions, m_Tank.instanceCount, XM_PI / 2);
+	m_Tank.transformMatrix = unitMatrix;
 
 	m_GiantRobot.instanceCount = 72;
 	m_GiantRobot.scale = XMFLOAT3(10.0f, 10.0f, 10.0f);
@@ -890,6 +994,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_GiantRobot.model = new ModelClass(m_GiantRobot.positions, m_GiantRobot.instanceCount, 0.0f);
+	m_GiantRobot.transformMatrix = unitMatrix;
 
 	m_HulkBuster.instanceCount = 69;
 	m_HulkBuster.scale = XMFLOAT3(1.5f, 1.5f, 1.5f);
@@ -902,6 +1007,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_HulkBuster.model = new ModelClass(m_HulkBuster.positions, m_HulkBuster.instanceCount, 0.0f);
+	m_HulkBuster.transformMatrix = unitMatrix;
 
 	m_RifleSoldier.instanceCount = 288;
 	m_RifleSoldier.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -921,6 +1027,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_RifleSoldier.model = new ModelClass(m_RifleSoldier.positions, m_RifleSoldier.instanceCount, 0.0f);
+	m_RifleSoldier.transformMatrix = unitMatrix;
 	
 	// Single Villain
 	m_Diablo.instanceCount = 1;
@@ -928,30 +1035,35 @@ void GraphicsClass::SetModelsInfo()
 	m_Diablo.positions = new XMFLOAT3[m_Diablo.instanceCount];
 	m_Diablo.positions[0] = divideXMF3(XMFLOAT3(0.0f, 0.0f, -52.0f), m_Diablo.scale);
 	m_Diablo.model = new ModelClass(m_Diablo.positions, m_Diablo.instanceCount, XM_PI);
+	m_Diablo.transformMatrix = unitMatrix;
 
 	m_Smoker.instanceCount = 1;
 	m_Smoker.scale = XMFLOAT3(0.08f, 0.08f, 0.08f);
 	m_Smoker.positions = new XMFLOAT3[m_Smoker.instanceCount];
 	m_Smoker.positions[0] = divideXMF3(XMFLOAT3(20.0f, 0.0f, -60.0f), m_Smoker.scale);
 	m_Smoker.model = new ModelClass(m_Smoker.positions, m_Smoker.instanceCount, XM_PI);
+	m_Smoker.transformMatrix = unitMatrix;
 
 	m_AbominationHulk.instanceCount = 1;
 	m_AbominationHulk.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	m_AbominationHulk.positions = new XMFLOAT3[m_AbominationHulk.instanceCount];
 	m_AbominationHulk.positions[0] = divideXMF3(XMFLOAT3(8.0f, 0.0f, -55.0f), m_AbominationHulk.scale);
 	m_AbominationHulk.model = new ModelClass(m_AbominationHulk.positions, m_AbominationHulk.instanceCount, XM_PI);
+	m_AbominationHulk.transformMatrix = unitMatrix;
 
 	m_Venom.instanceCount = 1;
 	m_Venom.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_Venom.positions = new XMFLOAT3[m_Venom.instanceCount];
 	m_Venom.positions[0] = divideXMF3(XMFLOAT3(-8.0f, 0.0f, -55.0f), m_Venom.scale);
 	m_Venom.model = new ModelClass(m_Venom.positions, m_Venom.instanceCount, XM_PI);
+	m_Venom.transformMatrix = unitMatrix;
 
 	m_Xuchilbara.instanceCount = 1;
 	m_Xuchilbara.scale = XMFLOAT3(0.05f, 0.05f, 0.05f);
 	m_Xuchilbara.positions = new XMFLOAT3[m_Xuchilbara.instanceCount];
 	m_Xuchilbara.positions[0] = divideXMF3(XMFLOAT3(-20.0f, 0.0f, -60.0f), m_Xuchilbara.scale);
 	m_Xuchilbara.model = new ModelClass(m_Xuchilbara.positions, m_Xuchilbara.instanceCount, XM_PI);
+	m_Xuchilbara.transformMatrix = unitMatrix;
 
 	// Multiple Viallains
 	m_HeavyRobot.instanceCount = 250;
@@ -965,6 +1077,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_HeavyRobot.model = new ModelClass(m_HeavyRobot.positions, m_HeavyRobot.instanceCount, XM_PI);
+	m_HeavyRobot.transformMatrix = unitMatrix;
 
 	m_Librarian.instanceCount = 160;
 	m_Librarian.scale = XMFLOAT3(0.02f, 0.02f, 0.02f);
@@ -977,6 +1090,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_Librarian.model = new ModelClass(m_Librarian.positions, m_Librarian.instanceCount, XM_PI);
+	m_Librarian.transformMatrix = unitMatrix;
 
 	m_GiantAlien.instanceCount = 30;
 	m_GiantAlien.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -989,6 +1103,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_GiantAlien.model = new ModelClass(m_GiantAlien.positions, m_GiantAlien.instanceCount, XM_PI);
+	m_GiantAlien.transformMatrix = unitMatrix;
 
 	m_AlienWarrior.instanceCount = 28;
 	m_AlienWarrior.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
@@ -1008,6 +1123,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_AlienWarrior.model = new ModelClass(m_AlienWarrior.positions, m_AlienWarrior.instanceCount, -XM_PI / 2);
+	m_AlienWarrior.transformMatrix = unitMatrix;
 
 	// Environment
 	m_Plane.instanceCount = 4000;
@@ -1021,6 +1137,7 @@ void GraphicsClass::SetModelsInfo()
 		}
 	}
 	m_Plane.model = new ModelClass(m_Plane.positions, m_Plane.instanceCount, 0.0f);
+	m_Plane.transformMatrix = unitMatrix;
 
 	m_OldHouseN.instanceCount = 2;
 	m_OldHouseN.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
@@ -1028,6 +1145,7 @@ void GraphicsClass::SetModelsInfo()
 	m_OldHouseN.positions[0] = divideXMF3(XMFLOAT3(-105.0f, 0.0f, -306.0f), m_OldHouseN.scale);
 	m_OldHouseN.positions[1] = divideXMF3(XMFLOAT3(131.0f, 0.0f, -383.0f), m_OldHouseN.scale);
 	m_OldHouseN.model = new ModelClass(m_OldHouseN.positions, m_OldHouseN.instanceCount, XM_PI);
+	m_OldHouseN.transformMatrix = unitMatrix;
 
 	m_OldHouseS.instanceCount = 2;
 	m_OldHouseS.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
@@ -1035,6 +1153,7 @@ void GraphicsClass::SetModelsInfo()
 	m_OldHouseS.positions[0] = divideXMF3(XMFLOAT3(-133.0f, 0.0f, -408.0f), m_OldHouseS.scale);
 	m_OldHouseS.positions[1] = divideXMF3(XMFLOAT3(109.0f, 0.0f, -458.0f), m_OldHouseS.scale);
 	m_OldHouseS.model = new ModelClass(m_OldHouseS.positions, m_OldHouseS.instanceCount, 0.0f);
+	m_OldHouseS.transformMatrix = unitMatrix;
 
 	m_OldHouseE.instanceCount = 2;
 	m_OldHouseE.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
@@ -1042,6 +1161,7 @@ void GraphicsClass::SetModelsInfo()
 	m_OldHouseE.positions[0] = divideXMF3(XMFLOAT3(-96.0f, 0.0f, -465.0f), m_OldHouseE.scale);
 	m_OldHouseE.positions[1] = divideXMF3(XMFLOAT3(-11.0f, 0.0f, -368.0f), m_OldHouseE.scale);
 	m_OldHouseE.model = new ModelClass(m_OldHouseE.positions, m_OldHouseE.instanceCount, -XM_PI / 2);
+	m_OldHouseE.transformMatrix = unitMatrix;
 
 	m_OldHouseW.instanceCount = 2;
 	m_OldHouseW.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
@@ -1049,6 +1169,7 @@ void GraphicsClass::SetModelsInfo()
 	m_OldHouseW.positions[0] = divideXMF3(XMFLOAT3(105.0f, 0.0f, -279.0f), m_OldHouseW.scale);
 	m_OldHouseW.positions[1] = divideXMF3(XMFLOAT3(46.0f, 0.0f, -419.0f), m_OldHouseW.scale);
 	m_OldHouseW.model = new ModelClass(m_OldHouseW.positions, m_OldHouseW.instanceCount, XM_PI / 2);
+	m_OldHouseW.transformMatrix = unitMatrix;
 
 	m_TrafficSignN.instanceCount = 4;
 	m_TrafficSignN.scale = XMFLOAT3(0.1f, 0.1f, 0.1f);
@@ -1058,6 +1179,7 @@ void GraphicsClass::SetModelsInfo()
 	m_TrafficSignN.positions[2] = divideXMF3(XMFLOAT3(6.0f, 0.55f, -292.0f), m_TrafficSignN.scale);
 	m_TrafficSignN.positions[3] = divideXMF3(XMFLOAT3(67.0f, 0.55f, -266.0f), m_TrafficSignN.scale);
 	m_TrafficSignN.model = new ModelClass(m_TrafficSignN.positions, m_TrafficSignN.instanceCount, 0.0f);
+	m_TrafficSignN.transformMatrix = unitMatrix;
 
 	m_TrafficSignE.instanceCount = 6;
 	m_TrafficSignE.scale = XMFLOAT3(0.1f, 0.1f, 0.1f);
@@ -1069,6 +1191,7 @@ void GraphicsClass::SetModelsInfo()
 	m_TrafficSignE.positions[4] = divideXMF3(XMFLOAT3(-47.0f, 0.55f, -292.0f), m_TrafficSignE.scale);
 	m_TrafficSignE.positions[5] = divideXMF3(XMFLOAT3(-52.0f, 0.55f, -268.0f), m_TrafficSignE.scale);
 	m_TrafficSignE.model = new ModelClass(m_TrafficSignE.positions, m_TrafficSignE.instanceCount, XM_PI / 2);
+	m_TrafficSignE.transformMatrix = unitMatrix;
 
 	m_DamagedDockN.instanceCount = 5;
 	m_DamagedDockN.scale = XMFLOAT3(0.0075f, 0.0075f, 0.0075f);
@@ -1079,6 +1202,7 @@ void GraphicsClass::SetModelsInfo()
 	m_DamagedDockN.positions[3] = divideXMF3(XMFLOAT3(-136.0f, 0.55f, -327.0f), m_DamagedDockN.scale);
 	m_DamagedDockN.positions[4] = divideXMF3(XMFLOAT3(-52.0f, 0.55f, -323.0f), m_DamagedDockN.scale);
 	m_DamagedDockN.model = new ModelClass(m_DamagedDockN.positions, m_DamagedDockN.instanceCount, 0.0f);
+	m_DamagedDockN.transformMatrix = unitMatrix;
 
 	m_DamagedDockE.instanceCount = 6;
 	m_DamagedDockE.scale = XMFLOAT3(0.0075f, 0.0075f, 0.0075f);
@@ -1090,6 +1214,7 @@ void GraphicsClass::SetModelsInfo()
 	m_DamagedDockE.positions[4] = divideXMF3(XMFLOAT3(-46.0f, 0.55f, -254.0f), m_DamagedDockE.scale);
 	m_DamagedDockE.positions[5] = divideXMF3(XMFLOAT3(-154.0f, 0.55f, -286.0f), m_DamagedDockE.scale);
 	m_DamagedDockE.model = new ModelClass(m_DamagedDockE.positions, m_DamagedDockE.instanceCount, XM_PI / 2);
+	m_DamagedDockE.transformMatrix = unitMatrix;
 
 	m_DestroyedTank.instanceCount = 7;
 	m_DestroyedTank.scale = XMFLOAT3(0.005f, 0.005f, 0.005f);
@@ -1102,6 +1227,7 @@ void GraphicsClass::SetModelsInfo()
 	m_DestroyedTank.positions[5] = divideXMF3(XMFLOAT3(-125.0f, 0.55f, -360.0f), m_DestroyedTank.scale);
 	m_DestroyedTank.positions[6] = divideXMF3(XMFLOAT3(-37.0f, 0.55f, -449.0f), m_DestroyedTank.scale);
 	m_DestroyedTank.model = new ModelClass(m_DestroyedTank.positions, m_DestroyedTank.instanceCount, -XM_PI / 2);
+	m_DestroyedTank.transformMatrix = unitMatrix;
 
 	m_DestroyedHouse.instanceCount = 7;
 	m_DestroyedHouse.scale = XMFLOAT3(0.05f, 0.05f, 0.05f);
@@ -1114,12 +1240,14 @@ void GraphicsClass::SetModelsInfo()
 	m_DestroyedHouse.positions[5] = divideXMF3(XMFLOAT3(-80.0f, 0.55f, -262.0f), m_DestroyedHouse.scale);
 	m_DestroyedHouse.positions[6] = divideXMF3(XMFLOAT3(-88.0f, 0.55f, -397.0f), m_DestroyedHouse.scale);
 	m_DestroyedHouse.model = new ModelClass(m_DestroyedHouse.positions, m_DestroyedHouse.instanceCount, 0.0f);
+	m_DestroyedHouse.transformMatrix = unitMatrix;
 
 	m_Spaceship.instanceCount = 1;
 	m_Spaceship.scale = XMFLOAT3(2.0f, 2.0f, 2.0f);
 	m_Spaceship.positions = new XMFLOAT3[m_Spaceship.instanceCount];
 	m_Spaceship.positions[0] = divideXMF3(XMFLOAT3(0.0f, 116.0f, -256.0f), m_Spaceship.scale);
 	m_Spaceship.model = new ModelClass(m_Spaceship.positions, m_Spaceship.instanceCount, XM_PI);
+	m_Spaceship.transformMatrix = unitMatrix;
 
 	m_Hospital.instanceCount = 2;
 	m_Hospital.scale = XMFLOAT3(0.02f, 0.02f, 0.02f);
@@ -1127,16 +1255,34 @@ void GraphicsClass::SetModelsInfo()
 	m_Hospital.positions[0] = divideXMF3(XMFLOAT3(-128.0f, 0.0f, 370.0f), m_Hospital.scale);
 	m_Hospital.positions[1] = divideXMF3(XMFLOAT3(128.0f, 0.0f, 370.0f), m_Hospital.scale);
 	m_Hospital.model = new ModelClass(m_Hospital.positions, m_Hospital.instanceCount, 0.0f);
+	m_Hospital.transformMatrix = unitMatrix;
 
 	m_Building.instanceCount = 1;
 	m_Building.scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	m_Building.positions = new XMFLOAT3[m_Building.instanceCount];
 	m_Building.positions[0] = divideXMF3(XMFLOAT3(0.0f, 0.0f, 350.0f), m_Building.scale);
 	m_Building.model = new ModelClass(m_Building.positions, m_Building.instanceCount, 0.0f);
+	m_Building.transformMatrix = unitMatrix;
 
-	m_cube.instanceCount = 1;
-	m_cube.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_cube.positions = new XMFLOAT3[m_cube.instanceCount];
-	m_cube.positions[0] = divideXMF3(XMFLOAT3(0.0f, 0.0f, 0.0f), m_cube.scale);
-	m_cube.model = new ModelClass(m_cube.positions, m_cube.instanceCount, 0.0f);
+	m_Rock.instanceCount = 16;
+	m_Rock.scale = XMFLOAT3(5.0f, 5.0f, 5.0f);
+	m_Rock.positions = new XMFLOAT3[m_Rock.instanceCount];
+	m_Rock.positions[0] = divideXMF3(XMFLOAT3(0.0f, 50.0f, -203.0f), m_Rock.scale);
+	m_Rock.positions[1] = divideXMF3(XMFLOAT3(54.0f, 33.0f, -227.0f), m_Rock.scale);
+	m_Rock.positions[2] = divideXMF3(XMFLOAT3(-33.0f, 22.0f, -236.0f), m_Rock.scale);
+	m_Rock.positions[3] = divideXMF3(XMFLOAT3(-54.0f, 23.0f, -198.0f), m_Rock.scale);
+	m_Rock.positions[4] = divideXMF3(XMFLOAT3(30.0f, 42.0f, -162.0f), m_Rock.scale);
+	m_Rock.positions[5] = divideXMF3(XMFLOAT3(0.0f, 33.0f, -203.0f), m_Rock.scale);
+	m_Rock.positions[6] = divideXMF3(XMFLOAT3(-34.0f, 38.0f, -227.0f), m_Rock.scale);
+	m_Rock.positions[7] = divideXMF3(XMFLOAT3(-10.0f, 13.0f, -236.0f), m_Rock.scale);
+	m_Rock.positions[8] = divideXMF3(XMFLOAT3(53.0f, 14.0f, -198.0f), m_Rock.scale);
+	m_Rock.positions[9] = divideXMF3(XMFLOAT3(-19.0f, 19.0f, -162.0f), m_Rock.scale);
+	m_Rock.positions[10] = divideXMF3(XMFLOAT3(-40.0f, 19.0f, -190.0f), m_Rock.scale);
+	m_Rock.positions[11] = divideXMF3(XMFLOAT3(80.0f, 29.0f, -222.0f), m_Rock.scale);
+	m_Rock.positions[12] = divideXMF3(XMFLOAT3(40.0f, 39.0f, -180.0f), m_Rock.scale);
+	m_Rock.positions[13] = divideXMF3(XMFLOAT3(-80.0f, 21.0f, -190.0f), m_Rock.scale);
+	m_Rock.positions[14] = divideXMF3(XMFLOAT3(-10.0f, 47.0f, -240.0f), m_Rock.scale);
+	m_Rock.positions[15] = divideXMF3(XMFLOAT3(50.0f, 25.0f, -230.0f), m_Rock.scale);
+	m_Rock.model = new ModelClass(m_Rock.positions, m_Rock.instanceCount, 0.0f);
+	m_Rock.transformMatrix = unitMatrix;
 }
