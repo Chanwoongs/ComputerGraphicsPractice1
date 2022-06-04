@@ -69,6 +69,8 @@ public:
 
 	void SetAngle(float angle);
 
+	bool RotateVertices(ID3D11Device*, float);
+
 	bool LoadModel(const WCHAR*);
 	void ReleaseModel();
 
