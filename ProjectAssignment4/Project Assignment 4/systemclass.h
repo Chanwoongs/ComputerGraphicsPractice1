@@ -26,7 +26,9 @@ const float CAMERA_SPEED = 1.0f;
 ///////////////////////
 #include "inputclass.h"
 #include "graphicsclass.h"
-
+#include "fpsclass.h"
+#include "cpuclass.h"
+#include "timerclass.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: SystemClass
@@ -56,6 +58,9 @@ private:
 
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
+	FpsClass* m_Fps;
+	CpuClass* m_Cpu;
+	TimerClass* m_Timer;
 };
 
 
