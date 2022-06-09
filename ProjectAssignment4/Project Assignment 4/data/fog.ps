@@ -30,7 +30,7 @@ float4 FogPixelShader(PixelInputType input) : SV_TARGET
     float4 fogColor;
     float4 finalColor;
 
-    
+	
     // Sample the texture pixel at this location.
     textureColor = shaderTexture.Sample(SampleType, input.tex);
     
