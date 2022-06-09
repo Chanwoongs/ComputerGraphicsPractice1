@@ -15,7 +15,6 @@ const int NUM_LIGHTS = 3;
 #include <d3d11.h>
 #include <directxmath.h>
 #include <d3dcompiler.h>
-
 #include <fstream>
 
 using namespace std;
