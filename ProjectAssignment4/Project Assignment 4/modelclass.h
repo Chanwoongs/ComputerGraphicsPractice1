@@ -54,6 +54,7 @@ private:
 	};
 
 public:
+	ModelClass();
 	ModelClass(XMFLOAT3*, int, float);
 	ModelClass(const ModelClass&);
 	~ModelClass();
