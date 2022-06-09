@@ -15,6 +15,13 @@ GraphicsClass::GraphicsClass()
 	m_Light1 = 0;
 	m_Light2 = 0;
 	m_Light3 = 0;
+	m_Bitmap = 0;
+	m_Text = 0;
+
+	m_ParticleShader = 0;
+	m_ParticleSystem = 0;
+	m_ParticlePosition = 0;
+	m_ParticleCount = 160;
 
 	m_ambient = true;
 	m_diffuse = true;
@@ -44,7 +51,7 @@ GraphicsClass::~GraphicsClass()
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
-
+	XMMATRIX baseViewMatrix;
 
 	// Create the Direct3D object.
 	m_D3D = new D3DClass;
@@ -70,6 +77,27 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Set the initial position of the camera.
 	m_Camera->SetPosition(0.0f, 2.0f, -5.0f);	
+
+	/*
+	// Initialize a base view matrix with the camera for 2D user interface rendering.
+	m_Camera->Render();
+	m_Camera->GetViewMatrix(baseViewMatrix);
+
+	// Create the text object.
+	m_Text = new TextClass;
+	if (!m_Text)
+	{
+		return false;
+	}
+
+	// Initialize the text object.
+	result = m_Text->Initialize(m_D3D->GetDevice(), m_D3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, baseViewMatrix);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK);
+		return false;
+	}
+	*/
 
 	SetModelsInfo();
 	InitializeModels(hwnd);
@@ -167,6 +195,65 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Light3->SetDiffuseColor(0.9f, 0.9f, 0.9f, 1.0f);
 	m_Light3->SetPosition(0.0f, 100.0f, 0.0f);
 
+	// Create the bitmap object.
+	m_Bitmap = new BitmapClass;
+	if (!m_Bitmap)
+	{
+		return false;
+	}
+
+	// Initialize the bitmap object.
+	result = m_Bitmap->Initialize(m_D3D->GetDevice(), screenWidth, screenHeight, L"./data/seafloor.dds", 256, 256);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the bitmap object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the particle shader object.
+	m_ParticleShader = new ParticleShaderClass;
+	if (!m_ParticleShader)
+	{
+		return false;
+	}
+
+	// Initialize the particle shader object.
+	result = m_ParticleShader->Initialize(m_D3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the particle shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the particle system object.
+	m_ParticleSystem = new ParticleSystemClass[m_ParticleCount];
+	if (!m_ParticleSystem)
+	{
+		return false;
+	}
+
+	for (int i = 0; i < m_ParticleCount; i++)
+	{
+		// Initialize the particle system object.
+		result = m_ParticleSystem[i].Initialize(m_D3D->GetDevice(), L"./data/star.dds");
+		if (!result)
+		{
+			return false;
+		}
+	}
+
+	m_ParticlePosition = new XMFLOAT3[m_ParticleCount];
+
+	for (int i = 0; i < 20; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			m_ParticlePosition[8 * i + j].x = -175.0f + (50.0f * j);
+			m_ParticlePosition[8 * i + j].y = 25.0f;
+			m_ParticlePosition[8 * i + j].z = 475.0f - (50.0f * i);
+		}
+	}
+
 	return true;
 }
 
@@ -240,14 +327,14 @@ void GraphicsClass::Shutdown()
 	}
 
 	// Release the camera object.
-	if(m_Camera)
+	if (m_Camera)
 	{
 		delete m_Camera;
 		m_Camera = 0;
 	}
 
 	// Release the D3D object.
-	if(m_D3D)
+	if (m_D3D)
 	{
 		m_D3D->Shutdown();
 		delete m_D3D;
@@ -290,7 +377,7 @@ void GraphicsClass::Shutdown()
 		delete m_TextureShader;
 		m_TextureShader = 0;
 	}
-	
+
 	// Release the fog shader object.
 	if (m_FogShader)
 	{
@@ -299,10 +386,53 @@ void GraphicsClass::Shutdown()
 		m_FogShader = 0;
 	}
 
+	// Release the bitmap object.
+	if (m_Bitmap)
+	{
+		m_Bitmap->Shutdown();
+		delete m_Bitmap;
+		m_Bitmap = 0;
+	}
+	/*
+	// Release the text object.
+	if (m_Text)
+	{
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = 0;
+	}
+	*/
+	// Release the particle system object.
+	if (m_ParticleSystem)
+	{
+		for (int i = 0; i < m_ParticleCount; i++)
+		{
+			m_ParticleSystem[i].Shutdown();
+		}
+		delete[] m_ParticleSystem;
+		m_ParticleSystem = 0;
+	}
+
+	// Release the particle shader object.
+	if (m_ParticleShader)
+	{
+		m_ParticleShader->Shutdown();
+		delete m_ParticleShader;
+		m_ParticleShader = 0;
+	}
+
+	// Release the particle shader object.
+	if (m_ParticlePosition)
+	{
+		delete m_ParticlePosition;
+		m_ParticlePosition = 0;
+	}
+
+
 	return;
 }
 
-bool GraphicsClass::Frame()
+bool GraphicsClass::Frame(float frameTime)
 {
 	bool result;
 
@@ -317,6 +447,18 @@ bool GraphicsClass::Frame()
 	}
 	timer += 1.0f;
 
+	// Run the frame processing for the particle system.
+	for (int i = 0; i < m_ParticleCount / 2; i++)
+	{
+		m_ParticleSystem[i].SetParticleMode(0);
+		m_ParticleSystem[i].Frame(frameTime, m_D3D->GetDeviceContext());
+	}
+	for (int i = m_ParticleCount / 2; i < m_ParticleCount; i++)
+	{
+		m_ParticleSystem[i].SetParticleMode(1);
+		m_ParticleSystem[i].Frame(frameTime, m_D3D->GetDeviceContext());
+	}
+
 	// Render the graphics scene.
 	result = Render(rotation, timer);
 	if(!result)
@@ -329,11 +471,14 @@ bool GraphicsClass::Frame()
 
 bool GraphicsClass::Render(float rotation, float& timer)
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix, translateMatrix;
 	bool result;
 	XMFLOAT4 diffuseColor[3];
 	XMFLOAT4 lightPosition[3];
 	float fogColor, fogStart, fogEnd;
+	XMFLOAT3 cameraPosition, modelPosition;
+	double angle;
+	float billboardRotation;
 
 	// Set the color of the fog to grey.
 	fogColor = 0.5f;
@@ -363,7 +508,15 @@ bool GraphicsClass::Render(float rotation, float& timer)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_D3D->GetWorldMatrix(worldMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
+	m_D3D->GetOrthoMatrix(orthoMatrix);
 
+	// Turn off alpha blending after rendering the text.
+	m_D3D->TurnOffAlphaBlending();
+
+	// Turn the Z buffer back on now that all 2D rendering has completed.
+	m_D3D->TurnZBufferOn();
+
+	// 3D Rendering
 	auto tempWorldMatrix = worldMatrix;
 	m_models.at(35).model->RotateVertices(m_D3D->GetDevice(), rotation);
 
@@ -382,6 +535,78 @@ bool GraphicsClass::Render(float rotation, float& timer)
 			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower(),
 			m_Light->GetAmbientToggle(), m_Light->GetDiffuseToggle(), m_Light->GetSpecularToggle(), m_Light->GetFogToggle(),
 			diffuseColor, lightPosition, fogStart, fogEnd);
+		if (!result)
+		{
+			return false;
+		}
+	}
+
+	// Get the position of the camera.
+	cameraPosition = m_Camera->GetPosition();
+
+	// 2D Rendering
+	// Turn off the Z buffer to begin all 2D rendering.
+	m_D3D->TurnZBufferOff();
+
+	// Turn on the alpha blending before rendering the text.
+	m_D3D->TurnOnAlphaBlending();
+
+	/*
+	// Render the text strings.
+	result = m_Text->Render(m_D3D->GetDeviceContext(), worldMatrix, orthoMatrix);
+	if (!result)
+	{
+		return false;
+	}
+
+
+	// Put the bitmap vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	result = m_Bitmap->Render(m_D3D->GetDeviceContext(), 100, 100);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Render the bitmap with the texture shader.
+	result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+	*/
+
+	for (int i = 0; i < m_ParticleCount; i++)
+	{
+		/*
+		// Set the position of the billboard model.
+		modelPosition.x = 0.0f;
+		modelPosition.y = 10.0f;
+		modelPosition.z = 0.0f;
+		*/
+
+		// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+		angle = atan2(m_ParticlePosition[i].x - cameraPosition.x, m_ParticlePosition[i].z - cameraPosition.z) * (180.0 / XM_PI);
+
+		// Convert rotation into radians.
+		billboardRotation = m_Camera->GetRotation().y * 0.0174532925f;
+
+		tempWorldMatrix = worldMatrix;
+
+		// Setup the rotation the billboard at the origin using the world matrix.
+		tempWorldMatrix *= XMMatrixRotationY(billboardRotation);
+
+		// Setup the translation matrix from the billboard model.
+		translateMatrix = XMMatrixTranslation(m_ParticlePosition[i].x, m_ParticlePosition[i].y, m_ParticlePosition[i].z);
+
+		// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
+		tempWorldMatrix = XMMatrixMultiply(tempWorldMatrix, translateMatrix);
+
+		// Put the particle system vertex and index buffers on the graphics pipeline to prepare them for drawing.
+		m_ParticleSystem[i].Render(m_D3D->GetDeviceContext());
+
+		// Render the model using the texture shader.
+		result = m_ParticleShader->Render(m_D3D->GetDeviceContext(), m_ParticleSystem[i].GetIndexCount(), tempWorldMatrix, viewMatrix, projectionMatrix,
+			m_ParticleSystem[i].GetTexture());
 		if (!result)
 		{
 			return false;

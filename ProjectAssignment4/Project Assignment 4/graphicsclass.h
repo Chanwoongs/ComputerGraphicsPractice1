@@ -19,6 +19,10 @@
 #include "lightclass.h"
 #include "textureshaderclass.h"
 #include "fogshaderclass.h"
+#include "bitmapclass.h"
+#include "textclass.h"
+#include "particleshaderclass.h"
+#include "particlesystemclass.h"
 
 /////////////
 // GLOBALS //
@@ -49,7 +53,7 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame();
+	bool Frame(float);
 
 	void toggleAmbient();
 	void toggleDiffuse();
@@ -73,6 +77,13 @@ private:
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
 	FogShaderClass* m_FogShader;
+	BitmapClass* m_Bitmap;
+	TextClass* m_Text;
+
+	ParticleShaderClass* m_ParticleShader;
+	ParticleSystemClass* m_ParticleSystem;
+	XMFLOAT3* m_ParticlePosition;
+	int m_ParticleCount;
 
 	LightClass* m_Light1;
 	LightClass* m_Light2;
