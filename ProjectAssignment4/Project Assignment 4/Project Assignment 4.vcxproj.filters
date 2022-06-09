@@ -57,6 +57,33 @@
     <ClCompile Include="fogshaderclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="timerclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="fpsclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="cpuclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="bitmapclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="fontclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="fontshaderclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="textclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="particlesystemclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="particleshaderclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="textureclass.h">
@@ -101,44 +128,33 @@
     <ClInclude Include="fogshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="data\ironman.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\Katarina.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\seafloor.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\SpongeBob.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\AlienWarrior.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\Plane.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\Astronaut.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\GiantAlien.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\Spiderman.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\Xuchilbara.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\Oldcar.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\DamagedDock.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
+    <ClInclude Include="timerclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="fpsclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="cpuclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="bitmapclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="fontclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="fontshaderclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="textclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="particlesystemclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="particleshaderclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\color.ps">
@@ -163,6 +179,18 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="data\fog.vs">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\font.ps">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\font.vs">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\particle.ps">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\particle.vs">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>
