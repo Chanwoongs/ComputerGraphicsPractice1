@@ -5,7 +5,7 @@
 /////////////
 // DEFINES //
 /////////////
-#define NUM_LIGHTS 1
+#define NUM_LIGHTS 3
 
 /////////////
 // GLOBALS //
@@ -28,6 +28,13 @@ cbuffer LightPositionBuffer
 	float4 lightPosition[NUM_LIGHTS];
 };
 
+cbuffer FogBuffer
+{
+    float fogStart;
+    float fogEnd;
+    float padding1, padding2;
+};
+
 //////////////
 // TYPEDEFS //
 //////////////
@@ -46,6 +53,9 @@ struct PixelInputType
 	float3 normal : NORMAL;
 	float3 viewDirection : TEXCOORD1;
     float3 lightPos1 : TEXCOORD2;
+    float3 lightPos2 : TEXCOORD3;
+    float3 lightPos3 : TEXCOORD4;
+    float fogFactor : FOG;
 };
 
 
@@ -56,9 +66,11 @@ PixelInputType LightVertexShader(VertexInputType input)
 {
     PixelInputType output;
 	float4 worldPosition;
+    float4 currCameraPosition;
     float angle = 0.0f;
     
-    matrix <float, 4, 4> rotMatrix = { cos(angle), 0.0f, sin(angle), 0.0f,
+    matrix <float, 4, 4> rotMatrix = { 
+                  cos(angle), 0.0f, sin(angle), 0.0f,
                   0.0f, 1.0f, 0.0f, 0.0f,
                   -sin(angle), 0.0f, cos(angle), 0.0f,
                   0.0f, 0.0f, 0.0f, 1.0f
@@ -96,9 +108,20 @@ PixelInputType LightVertexShader(VertexInputType input)
 
     // Determine the light positions based on the position of the lights and the position of the vertex in the world.
     output.lightPos1.xyz = lightPosition[0].xyz - worldPosition.xyz; // d 구하기
+    output.lightPos2.xyz = lightPosition[1].xyz - worldPosition.xyz; // d 구하기
+    output.lightPos3.xyz = lightPosition[2].xyz - worldPosition.xyz; // d 구하기
 
     // Normalize the light position vectors.
     output.lightPos1 = normalize(output.lightPos1);
+    output.lightPos2 = normalize(output.lightPos2);
+    output.lightPos3 = normalize(output.lightPos3);
+
+    // Calculate the camera position.
+    currCameraPosition = mul(input.position, worldMatrix);
+    currCameraPosition = mul(currCameraPosition, viewMatrix);
+
+    // Calculate linear fog.    
+    output.fogFactor = saturate((fogEnd - currCameraPosition.z) / (fogEnd - fogStart));
 
     return output;
 }
