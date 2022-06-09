@@ -25,7 +25,7 @@ CameraClass::CameraClass()
 	m_moveBackForward = 0.0f;
 	m_moveUpDown = 0.0f;
 
-	m_yaw = 0.0f;
+	m_yaw = 90.0f;
 	m_pitch = 0.0f;
 	m_roll = 0.0f;
 }
