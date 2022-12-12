@@ -668,8 +668,6 @@ void GraphicsClass::UpdateModelsTransformMatrix(float &timer)
 	{
 		m_models.at(35).transformMatrix *= XMMatrixTranslation(0.0f, 1.2f * meteorDirection, 0.0f);
 	}
-	
-
 }
 
 bool GraphicsClass::InitializeModels(HWND hwnd)
@@ -1121,7 +1119,7 @@ bool GraphicsClass::InitializeModels(HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
-	
+
 	return true;
 }
 

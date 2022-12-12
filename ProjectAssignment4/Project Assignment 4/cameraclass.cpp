@@ -161,4 +161,3 @@ void CameraClass::RotateCamera(float x, float y, float z)
 	m_rotation.y += y;
 	m_rotation.z += z;
 }
-
