@@ -18,8 +18,8 @@
 ### 기술
 > #### [3D 오브젝트 인스턴싱](https://github.com/Chanwoongs/ComputerGraphicsPractice1/blob/main/ProjectAssignment4/Project%20Assignment%204/modelclass.cpp)
 > 규칙적이고 많은 3D Object를 배치하기 위해 인스턴싱 사용, CPU 및 GPU의 부하를 줄이고 렌더링 시 성능 향상
-> #### [HLSL, Fog shader](https://github.com/Chanwoongs/ComputerGraphicsPractice1/blob/main/ProjectAssignment4/Project%20Assignment%204/data/light.ps)
-> Texture, Ambient, Diffuse, Specular Lighting, Fog shader HLSL 프로그래밍을 통해 pixel 값을 조절하여 적용
+> #### [HLSL, Point Light, Fog shader](https://github.com/Chanwoongs/ComputerGraphicsPractice1/blob/main/ProjectAssignment4/Project%20Assignment%204/data/light.ps)
+> Texture, Ambient, Diffuse, Specular Lighting, Point Light, Fog shader HLSL 프로그래밍을 통해 pixel 값을 조절하여 적용
 > #### 카메라 및 오브젝트 이동 회전
 > #### 빌보드 기법을 활용한 Particle System
 
